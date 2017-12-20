@@ -17,7 +17,7 @@ import java.util.*;
  * Controller for view and managing Log Level at runtime.
  */
 @RestController
-@RequestMapping("/generic")
+@RequestMapping("/class")
 public class GenericResource {
 
     private final GenericService genericService;
