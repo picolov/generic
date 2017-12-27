@@ -21,6 +21,10 @@ public class Layout implements Serializable {
 
     private String name;
 
+    private String title;
+
+    private List<Map<String, Object>> init = new ArrayList<>();
+
     private List<Map<String, Object>> content = new ArrayList<>();
 
     public String getId() {
@@ -37,6 +41,22 @@ public class Layout implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public List<Map<String, Object>> getInit() {
+        return init;
+    }
+
+    public void setInit(List<Map<String, Object>> init) {
+        this.init = init;
     }
 
     public List<Map<String, Object>> getContent() {
