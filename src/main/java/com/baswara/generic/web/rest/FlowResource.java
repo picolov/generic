@@ -1,5 +1,6 @@
 package com.baswara.generic.web.rest;
 
+import com.baswara.generic.client.AccountFeignClient;
 import com.baswara.generic.domain.Flow;
 import com.baswara.generic.domain.Layout;
 import com.baswara.generic.repository.FlowRepository;
@@ -22,13 +23,16 @@ import java.util.Optional;
 @RequestMapping("/flow")
 public class FlowResource {
 
+    private final AccountFeignClient accountFeignClient;
+
     private final LayoutRepository layoutRepository;
 
     private final FlowRepository flowRepository;
 
-    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository) {
+    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, AccountFeignClient accountFeignClient) {
         this.layoutRepository = layoutRepository;
         this.flowRepository = flowRepository;
+        this.accountFeignClient = accountFeignClient;
     }
 
     @DeleteMapping("")
@@ -59,16 +63,24 @@ public class FlowResource {
 
     @GetMapping("/path/{path}")
     public ResponseEntity<Object> findPath(@PathVariable String path) {
+        System.out.println("initial Path=" + path);
         Optional<Flow> flowExist = flowRepository.findOneByPath(path);
-        Binding binding = new Binding();
-        binding.setVariable("res", this);
-        binding.setVariable("path", path);
-        GroovyShell shell = new GroovyShell(binding);
-        String groovyScript = "return res.testong(path)";
-        Object value = shell.evaluate(groovyScript);
-        int a = 1;
         if (flowExist.isPresent()) {
-            return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
+            Flow flow = flowExist.get();
+            Map<String, Object> account = accountFeignClient.getAccount();
+            Binding binding = new Binding();
+            binding.setVariable("account", account);
+            binding.setVariable("function", this);
+            binding.setVariable("path", path);
+            GroovyShell shell = new GroovyShell(binding);
+            String viewPath = shell.evaluate(flow.getScript()).toString();
+            System.out.println("Result Path=" + viewPath);
+            Optional<Layout> layoutExist = layoutRepository.findOneByName(viewPath);
+            if (layoutExist.isPresent()) {
+                return new ResponseEntity<>(layoutExist.get(), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
+            }
         } else {
             Optional<Layout> layoutExist = layoutRepository.findOneByName(path);
             if (layoutExist.isPresent()) {

@@ -252,6 +252,13 @@ public class GenericResource {
                     case "string":
                         objToSave.put(key, objParam.get(key));
                         break;
+                    case "stringlist":
+                        if (objParam.get(key) instanceof ArrayList) {
+                            objToSave.put(key, objParam.get(key));
+                        } else if (objParam.get(key) instanceof String) {
+                            objToSave.put(key, ((String) objParam.get(key)).split(","));
+                        }
+                        break;
                     case "date":
                         if (objParam.get(key) instanceof String) {
                             try {
@@ -302,6 +309,13 @@ public class GenericResource {
                             break;
                         case "string":
                             objToSave.put(key, objParam.get(key));
+                            break;
+                        case "stringlist":
+                            if (objParam.get(key) instanceof ArrayList) {
+                                objToSave.put(key, objParam.get(key));
+                            } else if (objParam.get(key) instanceof String) {
+                                objToSave.put(key, ((String) objParam.get(key)).split(","));
+                            }
                             break;
                         case "date":
                             if (objParam.get(key) instanceof String) {
@@ -356,6 +370,13 @@ public class GenericResource {
                             break;
                         case "string":
                             objToSave.put(key, objParam.get(key));
+                            break;
+                        case "stringlist":
+                            if (objParam.get(key) instanceof ArrayList) {
+                                objToSave.put(key, objParam.get(key));
+                            } else if (objParam.get(key) instanceof String) {
+                                objToSave.put(key, ((String) objParam.get(key)).split(","));
+                            }
                             break;
                         case "date":
                             if (objParam.get(key) instanceof String) {
