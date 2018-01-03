@@ -2,6 +2,8 @@ package com.baswara.generic.web.rest;
 
 import com.baswara.generic.domain.Meta;
 import com.baswara.generic.repository.MetaRepository;
+import com.baswara.generic.web.rest.errors.MetaClassNotFoundException;
+import com.mongodb.DBObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller for view and managing Log Level at runtime.
@@ -71,5 +74,51 @@ public class MetaResource {
     public ResponseEntity<Object> saveList(@RequestBody List<Meta> objParamList) {
         List<Meta> result = metaRepository.save(objParamList);
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @PostMapping("/link/{_class1}/{_class2}")
+    public ResponseEntity<Object> link(@PathVariable String _class1, @PathVariable String _class2) {
+        Optional<Meta> meta1Exist = metaRepository.findOneByName(_class1);
+        Optional<Meta> meta2Exist = metaRepository.findOneByName(_class2);
+        if (meta1Exist.isPresent() && meta2Exist.isPresent()) {
+            Meta meta1 = meta1Exist.get();
+            Meta meta2 = meta2Exist.get();
+            Meta metaLink = new Meta();
+            metaLink.setName(meta1.getName() + "-" + meta2.getName());
+            Map<String, Map<String, Object>> columnMap = new HashMap<>();
+            Map<String, Object> column = new HashMap<>();
+            column.put("name", meta1.getName());
+            column.put("type", "ref");
+            columnMap.put(meta1.getName(), column);
+            column = new HashMap<>();
+            column.put("name", meta2.getName());
+            column.put("type", "ref");
+            columnMap.put(meta2.getName(), column);
+            metaLink.setColumns(columnMap);
+            // update meta 1, add link to columns
+            Map<String, Map<String, Object>> columnMapMeta1 = meta1.getColumns();
+            if (!columnMapMeta1.containsKey(meta2.getName())) {
+                column = new HashMap<>();
+                column.put("name", meta2.getName());
+                column.put("type", "link");
+                column.put("relModel", metaLink.getName());
+                columnMapMeta1.put(meta2.getName(), column);
+            }
+            metaRepository.save(meta1);
+            // update meta 2, add link to columns
+            Map<String, Map<String, Object>> columnMapMeta2 = meta2.getColumns();
+            if (!columnMapMeta2.containsKey(meta1.getName())) {
+                column = new HashMap<>();
+                column.put("name", meta1.getName());
+                column.put("type", "link");
+                column.put("relModel", metaLink.getName());
+                columnMapMeta2.put(meta1.getName(), column);
+            }
+            metaRepository.save(meta2);
+            Meta result = metaRepository.save(metaLink);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } else {
+            throw new MetaClassNotFoundException();
+        }
     }
 }

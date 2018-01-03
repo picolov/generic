@@ -126,6 +126,9 @@ public class GenericResource {
                                 result.put(key, resp.get(key));
                             }
                             break;
+                        case "link":
+
+                            break;
                         default:
                             result.put(key, resp.get(key));
                     }
@@ -230,55 +233,81 @@ public class GenericResource {
     @PostMapping("/{_class}")
     public ResponseEntity<Object> save(@PathVariable String _class, @RequestBody BasicDBObject objParam) {
         Optional<Meta> metaExist = metaRepository.findOneByName(_class);
+        Map<String, BasicDBObject> linkToSaveMap = new HashMap<>();
         if (metaExist.isPresent()) {
             BasicDBObject objToSave =  new BasicDBObject();
             Meta meta = metaExist.get();
             meta.getColumns().put("_id", ID_MAP);
+            if (!objParam.containsField("_id")) {
+                objParam.put("_id", UUID.randomUUID().toString());
+            }
             for (String key : meta.getColumns().keySet()) {
-                Map columnMap = meta.getColumns().get(key);
-                switch ((String) columnMap.get("type")) {
-                    case "numeric":
-                        objToSave.put(key, Long.parseLong(objParam.get(key) + ""));
-                        break;
-                    case "ref":
-                        if (objParam.get(key) instanceof String) {
+                if (objParam.containsField(key)) {
+                    Map columnMap = meta.getColumns().get(key);
+                    switch ((String) columnMap.get("type")) {
+                        case "numeric":
+                            objToSave.put(key, Long.parseLong(objParam.get(key) + ""));
+                            break;
+                        case "ref":
+                            if (objParam.get(key) instanceof String) {
+                                objToSave.put(key, objParam.get(key));
+                            } else if (objParam.get(key) instanceof Map) {
+                                Map value = (Map) objParam.get(key);
+                                if (value.containsKey("_id")) objToSave.put(key, value.get("_id"));
+                                else if (value.containsKey("id")) objToSave.put(key, value.get("id"));
+                            }
+                            break;
+                        case "string":
                             objToSave.put(key, objParam.get(key));
-                        } else if (objParam.get(key) instanceof Map) {
-                            Map value = (Map) objParam.get(key);
-                            if (value.containsKey("_id")) objToSave.put(key, value.get("_id"));
-                            else if (value.containsKey("id")) objToSave.put(key, value.get("id"));
-                        }
-                        break;
-                    case "string":
-                        objToSave.put(key, objParam.get(key));
-                        break;
-                    case "stringlist":
-                        if (objParam.get(key) instanceof ArrayList) {
-                            objToSave.put(key, objParam.get(key));
-                        } else if (objParam.get(key) instanceof String) {
-                            objToSave.put(key, ((String) objParam.get(key)).split(","));
-                        }
-                        break;
-                    case "date":
-                        if (objParam.get(key) instanceof String) {
-                            try {
-                                Date date = sdfDateDataType.parse((String) objParam.get(key));
-                                objToSave.put(key, date.getTime());
-                            } catch (ParseException e) {
+                            break;
+                        case "stringlist":
+                            if (objParam.get(key) instanceof ArrayList) {
+                                objToSave.put(key, objParam.get(key));
+                            } else if (objParam.get(key) instanceof String) {
+                                objToSave.put(key, ((String) objParam.get(key)).split(","));
+                            }
+                            break;
+                        case "date":
+                            if (objParam.get(key) instanceof String) {
                                 try {
-                                    objToSave.put(key, Long.parseLong((String) objParam.get(key)));
-                                } catch (NumberFormatException e2) {
-                                    // none will be saved if sdf parse failed and number string parse failed
+                                    Date date = sdfDateDataType.parse((String) objParam.get(key));
+                                    objToSave.put(key, date.getTime());
+                                } catch (ParseException e) {
+                                    try {
+                                        objToSave.put(key, Long.parseLong((String) objParam.get(key)));
+                                    } catch (NumberFormatException e2) {
+                                        // none will be saved if sdf parse failed and number string parse failed
+                                    }
                                 }
                             }
-                        }
-                        break;
-                    default:
-                        objToSave.put(key, objParam.get(key));
-                        break;
+                            break;
+                        case "link":
+                            String relModel = (String) columnMap.get("relModel");
+                            if (objParam.get(key) instanceof ArrayList) {
+                                List valueList = (ArrayList) objParam.get(key);
+                                for (int i = 0; i < valueList.size(); i++) {
+                                    BasicDBObject linkToSave = new BasicDBObject();
+                                    linkToSave.put(key, valueList.get(i));
+                                    linkToSaveMap.put(relModel, linkToSave);
+                                }
+                            } else if (objParam.get(key) instanceof String) {
+                                BasicDBObject linkToSave = new BasicDBObject();
+                                linkToSave.put(key, objParam.get(key));
+                                linkToSaveMap.put(relModel, linkToSave);
+                            }
+                            break;
+                        default:
+                            objToSave.put(key, objParam.get(key));
+                            break;
+                    }
                 }
             }
             DBObject result = genericService.save(_class, objToSave);
+            for (Map.Entry<String, BasicDBObject> linkEntry : linkToSaveMap.entrySet()) {
+                BasicDBObject link = linkEntry.getValue();
+                link.put(meta.getName(), result.get("_id"));
+                genericService.save(linkEntry.getKey(), link);
+            }
             return new ResponseEntity<>(result, HttpStatus.OK);
         } else {
             throw new MetaClassNotFoundException();
@@ -288,6 +317,7 @@ public class GenericResource {
     @PutMapping("/{_class}")
     public ResponseEntity<Object> update(@PathVariable String _class, @RequestBody BasicDBObject objParam) {
         Optional<Meta> metaExist = metaRepository.findOneByName(_class);
+        Map<String, BasicDBObject> linkToSaveMap = new HashMap<>();
         if (metaExist.isPresent()) {
             BasicDBObject objToSave = (BasicDBObject) genericService.findById(_class, (String) objParam.get("_id"));
             Meta meta = metaExist.get();
@@ -331,6 +361,21 @@ public class GenericResource {
                                 }
                             }
                             break;
+                        case "link":
+                            String relModel = (String) columnMap.get("relModel");
+                            if (objParam.get(key) instanceof ArrayList) {
+                                List valueList = (ArrayList) objParam.get(key);
+                                for (int i = 0; i < valueList.size(); i++) {
+                                    BasicDBObject linkToSave = new BasicDBObject();
+                                    linkToSave.put(key, valueList.get(i));
+                                    linkToSaveMap.put(relModel, linkToSave);
+                                }
+                            } else if (objParam.get(key) instanceof String) {
+                                BasicDBObject linkToSave =  new BasicDBObject();
+                                linkToSave.put(key, objParam.get(key));
+                                linkToSaveMap.put(relModel, linkToSave);
+                            }
+                            break;
                         default:
                             objToSave.put(key, objParam.get(key));
                             break;
@@ -338,6 +383,11 @@ public class GenericResource {
                 }
             }
             DBObject result = genericService.save(_class, objToSave);
+            for (Map.Entry<String, BasicDBObject> linkEntry : linkToSaveMap.entrySet()) {
+                BasicDBObject link = linkEntry.getValue();
+                link.put(meta.getName(), result.get("_id"));
+                genericService.save(linkEntry.getKey(), link);
+            }
             return new ResponseEntity<>(result, HttpStatus.OK);
         } else {
             throw new MetaClassNotFoundException();
@@ -347,54 +397,75 @@ public class GenericResource {
     @PostMapping("/bulk/{_class}")
     public ResponseEntity<Object> saveList(@PathVariable String _class, @RequestBody List<BasicDBObject> objParamList) {
         Optional<Meta> metaExist = metaRepository.findOneByName(_class);
+        Map<String, BasicDBObject> linkToSaveMap = new HashMap<>();
         if (metaExist.isPresent()) {
             List<DBObject> objList = new ArrayList<>();
             for (DBObject objParam:objParamList) {
                 DBObject objToSave = new BasicDBObject();
                 Meta meta = metaExist.get();
                 meta.getColumns().put("_id", ID_MAP);
+                if (!objParam.containsField("_id")) {
+                    objParam.put("_id", UUID.randomUUID().toString());
+                }
                 for (String key : meta.getColumns().keySet()) {
-                    Map columnMap = meta.getColumns().get(key);
-                    switch ((String) columnMap.get("type")) {
-                        case "numeric":
-                            objToSave.put(key, Long.parseLong(objParam.get(key) + ""));
-                            break;
-                        case "ref":
-                            if (objParam.get(key) instanceof String) {
+                    if (objParam.containsField(key)) {
+                        Map columnMap = meta.getColumns().get(key);
+                        switch ((String) columnMap.get("type")) {
+                            case "numeric":
+                                objToSave.put(key, Long.parseLong(objParam.get(key) + ""));
+                                break;
+                            case "ref":
+                                if (objParam.get(key) instanceof String) {
+                                    objToSave.put(key, objParam.get(key));
+                                } else if (objParam.get(key) instanceof Map) {
+                                    Map value = (Map) objParam.get(key);
+                                    if (value.containsKey("_id")) objToSave.put(key, value.get("_id"));
+                                    else if (value.containsKey("id")) objToSave.put(key, value.get("id"));
+                                }
+                                break;
+                            case "string":
                                 objToSave.put(key, objParam.get(key));
-                            } else if (objParam.get(key) instanceof Map) {
-                                Map value = (Map) objParam.get(key);
-                                if (value.containsKey("_id")) objToSave.put(key, value.get("_id"));
-                                else if (value.containsKey("id")) objToSave.put(key, value.get("id"));
-                            }
-                            break;
-                        case "string":
-                            objToSave.put(key, objParam.get(key));
-                            break;
-                        case "stringlist":
-                            if (objParam.get(key) instanceof ArrayList) {
-                                objToSave.put(key, objParam.get(key));
-                            } else if (objParam.get(key) instanceof String) {
-                                objToSave.put(key, ((String) objParam.get(key)).split(","));
-                            }
-                            break;
-                        case "date":
-                            if (objParam.get(key) instanceof String) {
-                                try {
-                                    Date date = sdfDateDataType.parse((String) objParam.get(key));
-                                    objToSave.put(key, date.getTime());
-                                } catch (ParseException e) {
+                                break;
+                            case "stringlist":
+                                if (objParam.get(key) instanceof ArrayList) {
+                                    objToSave.put(key, objParam.get(key));
+                                } else if (objParam.get(key) instanceof String) {
+                                    objToSave.put(key, ((String) objParam.get(key)).split(","));
+                                }
+                                break;
+                            case "date":
+                                if (objParam.get(key) instanceof String) {
                                     try {
-                                        objToSave.put(key, Long.parseLong((String) objParam.get(key)));
-                                    } catch (NumberFormatException e2) {
-                                        // none will be saved if sdf parse failed and number string parse failed
+                                        Date date = sdfDateDataType.parse((String) objParam.get(key));
+                                        objToSave.put(key, date.getTime());
+                                    } catch (ParseException e) {
+                                        try {
+                                            objToSave.put(key, Long.parseLong((String) objParam.get(key)));
+                                        } catch (NumberFormatException e2) {
+                                            // none will be saved if sdf parse failed and number string parse failed
+                                        }
                                     }
                                 }
-                            }
-                            break;
-                        default:
-                            objToSave.put(key, objParam.get(key));
-                            break;
+                                break;
+                            case "link":
+                                String relModel = (String) columnMap.get("relModel");
+                                if (objParam.get(key) instanceof ArrayList) {
+                                    List valueList = (ArrayList) objParam.get(key);
+                                    for (int i = 0; i < valueList.size(); i++) {
+                                        BasicDBObject linkToSave = new BasicDBObject();
+                                        linkToSave.put(key, valueList.get(i));
+                                        linkToSaveMap.put(relModel, linkToSave);
+                                    }
+                                } else if (objParam.get(key) instanceof String) {
+                                    BasicDBObject linkToSave =  new BasicDBObject();
+                                    linkToSave.put(key, objParam.get(key));
+                                    linkToSaveMap.put(relModel, linkToSave);
+                                }
+                                break;
+                            default:
+                                objToSave.put(key, objParam.get(key));
+                                break;
+                        }
                     }
                 }
                 objList.add(objToSave);
