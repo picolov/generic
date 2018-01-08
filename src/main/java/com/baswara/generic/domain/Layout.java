@@ -23,6 +23,8 @@ public class Layout implements Serializable {
 
     private String title;
 
+    private String viewAs;
+
     private List<Map<String, Object>> init = new ArrayList<>();
 
     private List<Map<String, Object>> content = new ArrayList<>();
@@ -49,6 +51,14 @@ public class Layout implements Serializable {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getViewAs() {
+        return viewAs;
+    }
+
+    public void setViewAs(String viewAs) {
+        this.viewAs = viewAs;
     }
 
     public List<Map<String, Object>> getInit() {

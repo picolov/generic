@@ -6,10 +6,6 @@ import com.baswara.generic.service.GenericService;
 import com.baswara.generic.web.rest.errors.MetaClassNotFoundException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +22,7 @@ import java.util.*;
 public class GenericResource {
 
     private final GenericService genericService;
-    private final MetaRepository metaRepository;// 2017-12-08T17:00:00.000Z
+    private final MetaRepository metaRepository;
     private final SimpleDateFormat sdfDateDataType = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private Map<String, Object> ID_MAP = new HashMap<>();
 
@@ -41,50 +37,26 @@ public class GenericResource {
     @GetMapping("/count/{_class}")
     public ResponseEntity<Object> count(@PathVariable String _class,
                                         @RequestParam(value = "criteria", required = false) String criteria) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            Meta meta = metaExist.get();
-            meta.getColumns().put("_id", ID_MAP);
-            long count = genericService.count(_class, criteria, meta);
-            return new ResponseEntity<>(count, HttpStatus.OK);
-        } else {
-            throw new MetaClassNotFoundException();
-        }
+        long count = genericService.count(_class, criteria);
+        return new ResponseEntity<>(count, HttpStatus.OK);
     }
 
     @GetMapping("/exist/{_class}/{id}")
     public ResponseEntity<Object> existsById(@PathVariable String _class, @PathVariable String id) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            boolean result = genericService.existsById(_class, id);
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        } else {
-            throw new MetaClassNotFoundException();
-        }
+        boolean result = genericService.existsById(_class, id);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @DeleteMapping("/{_class}")
     public ResponseEntity<Object> deleteAll(@PathVariable String _class) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            DBObject result = new BasicDBObject();
-            genericService.deleteAll(_class);
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        } else {
-            throw new MetaClassNotFoundException();
-        }
+        genericService.deleteAll(_class);
+        return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
     }
 
     @DeleteMapping("/{_class}/{id}")
     public ResponseEntity<Object> deleteById(@PathVariable String _class, @PathVariable String id) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            DBObject result = new BasicDBObject();
-            genericService.deleteById(_class, id);
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        } else {
-            throw new MetaClassNotFoundException();
-        }
+        genericService.deleteById(_class, id);
+        return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
     }
 
     @GetMapping("/{_class}")
@@ -94,51 +66,8 @@ public class GenericResource {
                                           @RequestParam(value = "size", required = false, defaultValue = "100") int size,
                                           @RequestParam(value = "sort", required = false) String sort,
                                           @RequestParam(value = "criteria", required = false) String criteria) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            Meta meta = metaExist.get();
-            meta.getColumns().put("_id", ID_MAP);
-            List<DBObject> resultList = new ArrayList<>();
-            List<Sort.Order> orderList = new ArrayList<>();
-            Pageable pageable;
-            if (sort != null) {
-                String[] sortTokenArr = sort.split(",");
-                for (String sortToken : sortTokenArr) {
-                    String[] token = sortToken.split(";");
-                    orderList.add(new Sort.Order(token[1].equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC, token[0]));
-                }
-                pageable = new PageRequest(page, size, new Sort(orderList));
-            } else {
-                pageable = new PageRequest(page, size);
-            }
-            List<DBObject> respList = genericService.findAllPaging(_class, criteria, pageable, meta);
-            for (DBObject resp:respList) {
-                DBObject result = new BasicDBObject();
-                result.put("_id", resp.get("_id"));
-                for (String key : meta.getColumns().keySet()) {
-                    Map columnMap = meta.getColumns().get(key);
-                    switch ((String) columnMap.get("type")) {
-                        case "ref":
-                            if (resp.get(key) != null && 1 <= level) {
-                                String classRef = (String) columnMap.get("classRef");
-                                result.put(key, getObject(classRef, (String) resp.get(key), 1, level));
-                            } else {
-                                result.put(key, resp.get(key));
-                            }
-                            break;
-                        case "link":
-
-                            break;
-                        default:
-                            result.put(key, resp.get(key));
-                    }
-                }
-                resultList.add(result);
-            }
-            return new ResponseEntity<>(resultList, HttpStatus.OK);
-        } else {
-            throw new MetaClassNotFoundException();
-        }
+        List<DBObject> resultList = genericService.findAllPaging(_class, criteria, level, page, size, sort);
+        return new ResponseEntity<>(resultList, HttpStatus.OK);
     }
 
     @GetMapping("/findAllWithTotal/{_class}")
@@ -148,87 +77,21 @@ public class GenericResource {
                                           @RequestParam(value = "size", required = false, defaultValue = "100") int size,
                                           @RequestParam(value = "sort", required = false) String sort,
                                           @RequestParam(value = "criteria", required = false) String criteria) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            Meta meta = metaExist.get();
-            meta.getColumns().put("_id", ID_MAP);
-            long count = genericService.count(_class, criteria, meta);
-            List<DBObject> resultList = new ArrayList<>();
-            List<Sort.Order> orderList = new ArrayList<>();
-            Pageable pageable;
-            if (sort != null) {
-                String[] sortTokenArr = sort.split(",");
-                for (String sortToken : sortTokenArr) {
-                    String[] token = sortToken.split(";");
-                    orderList.add(new Sort.Order(token[1].equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC, token[0]));
-                }
-                pageable = new PageRequest(page, size, new Sort(orderList));
-            } else {
-                pageable = new PageRequest(page, size);
-            }
-            List<DBObject> respList = genericService.findAllPaging(_class, criteria, pageable, meta);
-            for (DBObject resp:respList) {
-                DBObject result = new BasicDBObject();
-                result.put("_id", resp.get("_id"));
-                for (String key : meta.getColumns().keySet()) {
-                    Map columnMap = meta.getColumns().get(key);
-                    switch ((String) columnMap.get("type")) {
-                        case "ref":
-                            if (resp.get(key) != null && 1 <= level) {
-                                String classRef = (String) columnMap.get("classRef");
-                                result.put(key, getObject(classRef, (String) resp.get(key), 1, level));
-                            } else {
-                                result.put(key, resp.get(key));
-                            }
-                            break;
-                        default:
-                            result.put(key, resp.get(key));
-                    }
-                }
-                resultList.add(result);
-            }
-            Map<String, Object> resultMap = new HashMap<>();
-            resultMap.put("totalRows", count);
-            resultMap.put("list", resultList);
-            return new ResponseEntity<>(resultMap, HttpStatus.OK);
-        } else {
-            throw new MetaClassNotFoundException();
-        }
+        long count = genericService.count(_class, criteria);
+        List<DBObject> resultList = genericService.findAllPaging(_class, criteria, level, page, size, sort);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("totalRows", count);
+        resultMap.put("list", resultList);
+        return new ResponseEntity<>(resultMap, HttpStatus.OK);
     }
 
     @GetMapping("/{_class}/{id}")
     public ResponseEntity<Object> findById(@PathVariable String _class, @PathVariable String id,
                                            @RequestParam(value = "level", required = false, defaultValue = "1") int level) {
-        return new ResponseEntity<>(getObject(_class, id, 0, level), HttpStatus.OK);
+        return new ResponseEntity<>(genericService.getObject(_class, id, 0, level), HttpStatus.OK);
     }
 
-    private DBObject getObject(String _class, String id, int currLevel, int maxLevel) {
-        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
-        if (metaExist.isPresent()) {
-            Meta meta = metaExist.get();
-            meta.getColumns().put("_id", ID_MAP);
-            DBObject result = new BasicDBObject();
-            DBObject resp = genericService.findById(_class, id);
-            for (String key : meta.getColumns().keySet()) {
-                Map columnMap = meta.getColumns().get(key);
-                switch ((String) columnMap.get("type")) {
-                    case "ref":
-                        if (resp.get(key) != null && currLevel+1 <= maxLevel) {
-                            String classRef = (String) columnMap.get("classRef");
-                            result.put(key, getObject(classRef, (String) resp.get(key), currLevel + 1, maxLevel));
-                        } else {
-                            result.put(key, resp.get(key));
-                        }
-                        break;
-                    default:
-                        result.put(key, resp.get(key));
-                }
-            }
-            return result;
-        } else {
-            throw new MetaClassNotFoundException();
-        }
-    }
+
 
     @PostMapping("/{_class}")
     public ResponseEntity<Object> save(@PathVariable String _class, @RequestBody BasicDBObject objParam) {

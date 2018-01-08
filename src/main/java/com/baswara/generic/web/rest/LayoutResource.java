@@ -2,9 +2,6 @@ package com.baswara.generic.web.rest;
 
 import com.baswara.generic.domain.Layout;
 import com.baswara.generic.repository.LayoutRepository;
-import com.mongodb.DBObject;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -87,6 +84,7 @@ public class LayoutResource {
         layout.setName(objParam.getName());
         layout.setTitle(objParam.getTitle());
         layout.setInit(objParam.getInit());
+        layout.setViewAs(objParam.getViewAs());
 
         layout.setContent(objParam.getContent());
         layoutRepository.save(layout);

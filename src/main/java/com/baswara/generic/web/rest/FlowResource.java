@@ -5,6 +5,7 @@ import com.baswara.generic.domain.Flow;
 import com.baswara.generic.domain.Layout;
 import com.baswara.generic.repository.FlowRepository;
 import com.baswara.generic.repository.LayoutRepository;
+import com.baswara.generic.service.GenericService;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,12 @@ public class FlowResource {
 
     private final FlowRepository flowRepository;
 
-    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, AccountFeignClient accountFeignClient) {
+    private final GenericService genericService;
+
+    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, AccountFeignClient accountFeignClient) {
         this.layoutRepository = layoutRepository;
         this.flowRepository = flowRepository;
+        this.genericService = genericService;
         this.accountFeignClient = accountFeignClient;
     }
 
@@ -61,8 +65,8 @@ public class FlowResource {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @GetMapping("/path/{path}")
-    public ResponseEntity<Object> findPath(@PathVariable String path) {
+    @GetMapping("/layout/{path}")
+    public ResponseEntity<Object> layout(@PathVariable String path) {
         System.out.println("initial Path=" + path);
         Optional<Flow> flowExist = flowRepository.findOneByPath(path);
         if (flowExist.isPresent()) {
@@ -71,6 +75,7 @@ public class FlowResource {
             Binding binding = new Binding();
             binding.setVariable("account", account);
             binding.setVariable("function", this);
+            binding.setVariable("genericService", genericService);
             binding.setVariable("path", path);
             GroovyShell shell = new GroovyShell(binding);
             String viewPath = shell.evaluate(flow.getScript()).toString();
@@ -91,11 +96,24 @@ public class FlowResource {
         }
     }
 
-    public String testong (String path) {
-        String result = "none";
-        Optional<Layout> layoutExist = layoutRepository.findOneByName(path);
-        if (layoutExist.isPresent()) result = layoutExist.get().getId();
-        return result;
+    @PostMapping("/process/{path}")
+    public ResponseEntity<Object> process(@PathVariable String path, @RequestBody Map<String, Object> param) {
+        Optional<Flow> flowExist = flowRepository.findOneByPath(path);
+        if (flowExist.isPresent()) {
+            Flow flow = flowExist.get();
+            Map<String, Object> account = accountFeignClient.getAccount();
+            Binding binding = new Binding();
+            binding.setVariable("param", param);
+            binding.setVariable("account", account);
+            binding.setVariable("function", this);
+            binding.setVariable("genericService", genericService);
+            binding.setVariable("path", path);
+            GroovyShell shell = new GroovyShell(binding);
+            Object returnVal = shell.evaluate(flow.getScript());
+            return new ResponseEntity<>(returnVal, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
+        }
     }
 
     @PostMapping("")
