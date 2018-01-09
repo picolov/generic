@@ -71,8 +71,8 @@ public class FlowResource {
 
     @GetMapping("/layout/{path}")
     public ResponseEntity<Object> layout(@PathVariable String path) {
-        System.out.println("initial Path=" + path);
-        Optional<Flow> flowExist = flowRepository.findOneByPath(path);
+        System.out.println("initial Path=" + "layout-" + path);
+        Optional<Flow> flowExist = flowRepository.findOneByPath("layout-" + path);
         if (flowExist.isPresent()) {
             return process("layout-" + path, null);
         } else {
