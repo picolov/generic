@@ -6,6 +6,8 @@ import com.baswara.generic.domain.Layout;
 import com.baswara.generic.repository.FlowRepository;
 import com.baswara.generic.repository.LayoutRepository;
 import com.baswara.generic.service.GenericService;
+import com.baswara.generic.service.LayoutService;
+import com.mongodb.BasicDBObject;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.springframework.http.HttpStatus;
@@ -31,11 +33,13 @@ public class FlowResource {
     private final FlowRepository flowRepository;
 
     private final GenericService genericService;
+    private final LayoutService layoutService;
 
-    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, AccountFeignClient accountFeignClient) {
+    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, LayoutService layoutService, AccountFeignClient accountFeignClient) {
         this.layoutRepository = layoutRepository;
         this.flowRepository = flowRepository;
         this.genericService = genericService;
+        this.layoutService = layoutService;
         this.accountFeignClient = accountFeignClient;
     }
 
@@ -70,22 +74,7 @@ public class FlowResource {
         System.out.println("initial Path=" + path);
         Optional<Flow> flowExist = flowRepository.findOneByPath(path);
         if (flowExist.isPresent()) {
-            Flow flow = flowExist.get();
-            Map<String, Object> account = accountFeignClient.getAccount();
-            Binding binding = new Binding();
-            binding.setVariable("account", account);
-            binding.setVariable("function", this);
-            binding.setVariable("genericService", genericService);
-            binding.setVariable("path", path);
-            GroovyShell shell = new GroovyShell(binding);
-            String viewPath = shell.evaluate(flow.getScript()).toString();
-            System.out.println("Result Path=" + viewPath);
-            Optional<Layout> layoutExist = layoutRepository.findOneByName(viewPath);
-            if (layoutExist.isPresent()) {
-                return new ResponseEntity<>(layoutExist.get(), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
-            }
+            return process("layout-" + path, null);
         } else {
             Optional<Layout> layoutExist = layoutRepository.findOneByName(path);
             if (layoutExist.isPresent()) {
@@ -96,8 +85,18 @@ public class FlowResource {
         }
     }
 
+    public Object testScript(BasicDBObject param, Map<String, Object> account, String path) {
+        Object function = this;
+        // GenericService genericService
+        // LayoutService layoutService
+        // -----------------------------------------TEST HERE----------------------------------------------------
+        param.put("userId", account.get("login"));
+        genericService.save("userProfile", param);
+        return new HashMap<String, Object>();
+    }
+
     @PostMapping("/process/{path}")
-    public ResponseEntity<Object> process(@PathVariable String path, @RequestBody Map<String, Object> param) {
+    public ResponseEntity<Object> process(@PathVariable String path, @RequestBody BasicDBObject param) {
         Optional<Flow> flowExist = flowRepository.findOneByPath(path);
         if (flowExist.isPresent()) {
             Flow flow = flowExist.get();
@@ -107,6 +106,7 @@ public class FlowResource {
             binding.setVariable("account", account);
             binding.setVariable("function", this);
             binding.setVariable("genericService", genericService);
+            binding.setVariable("layoutService", layoutService);
             binding.setVariable("path", path);
             GroovyShell shell = new GroovyShell(binding);
             Object returnVal = shell.evaluate(flow.getScript());
