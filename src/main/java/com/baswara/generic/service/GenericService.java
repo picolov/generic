@@ -188,7 +188,7 @@ public class GenericService {
     }
 
     public DBObject findOne(String _class, String criteria, int level) {
-        List<DBObject> resultList = findAllPaging(_class, criteria, level, 1, 1, null);
+        List<DBObject> resultList = findAllPaging(_class, criteria, level, 0, 1, null);
         if (resultList != null && resultList.size() > 0) {
             return resultList.get(0);
         } else {

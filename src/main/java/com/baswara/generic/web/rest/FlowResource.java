@@ -87,12 +87,19 @@ public class FlowResource {
 
     public Object testScript(BasicDBObject param, Map<String, Object> account, String path) {
         Object function = this;
+        AccountFeignClient uaaService = null;
         // GenericService genericService
         // LayoutService layoutService
         // -----------------------------------------TEST HERE----------------------------------------------------
-        param.put("userId", account.get("login"));
-        genericService.save("userProfile", param);
-        return new HashMap<String, Object>();
+        String username = uaaService.registerUser(param);
+        if (!username.isEmpty()) {
+            BasicDBObject user = new BasicDBObject();
+            user.put("userId", param.get("login"));
+            user.put("email", param.get("email"));
+            user.put("phone", param.get("phone"));
+            genericService.saveModel("userProfile", user);
+        }
+        return username;
     }
 
     @PostMapping("/process/{path}")
@@ -107,6 +114,7 @@ public class FlowResource {
             binding.setVariable("function", this);
             binding.setVariable("genericService", genericService);
             binding.setVariable("layoutService", layoutService);
+            binding.setVariable("uaaService", accountFeignClient);
             binding.setVariable("path", path);
             GroovyShell shell = new GroovyShell(binding);
             Object returnVal = shell.evaluate(flow.getScript());
