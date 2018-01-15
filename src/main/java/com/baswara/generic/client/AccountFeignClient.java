@@ -11,6 +11,9 @@ public interface AccountFeignClient {
     public Map<String, Object> getAccount();
 
     @RequestMapping(method = RequestMethod.POST, value = "/api/account")
+    public Map<String, Object> updateAccount(Map<String, Object> userMap);
+
+    @RequestMapping(method = RequestMethod.PUT, value = "/api/users")
     public Map<String, Object> updateUser(Map<String, Object> userMap);
 
     @RequestMapping(method = RequestMethod.POST, value = "/api/account/change-password")
@@ -19,8 +22,11 @@ public interface AccountFeignClient {
     @RequestMapping(method = RequestMethod.POST, value = "/api/users")
     public Map<String, Object> createUser(Map<String, Object> userMap);
 
+    @RequestMapping(method = RequestMethod.GET, value = "/api/users/{login}")
+    public Map<String, Object> getUser(@PathVariable("login") String login);
+
     @RequestMapping(method = RequestMethod.DELETE, value = "/api/users/{login}")
-    public void createUser(@PathVariable("login") String login);
+    public void deleteUser(@PathVariable("login") String login);
 
     @RequestMapping(method = RequestMethod.POST, value = "/api/register")
     public String registerUser(Map<String, Object> userMap);

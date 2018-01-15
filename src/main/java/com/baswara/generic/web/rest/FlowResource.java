@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,11 +71,11 @@ public class FlowResource {
     }
 
     @GetMapping("/layout/{path}")
-    public ResponseEntity<Object> layout(@PathVariable String path) {
+    public ResponseEntity<Object> layout(HttpServletRequest request, @PathVariable String path) {
         System.out.println("initial Path=" + "layout-" + path);
         Optional<Flow> flowExist = flowRepository.findOneByPath("layout-" + path);
         if (flowExist.isPresent()) {
-            return process("layout-" + path, null);
+            return process(request,"layout-" + path, null);
         } else {
             Optional<Layout> layoutExist = layoutRepository.findOneByName(path);
             if (layoutExist.isPresent()) {
@@ -103,13 +104,15 @@ public class FlowResource {
     }
 
     @PostMapping("/process/{path}")
-    public ResponseEntity<Object> process(@PathVariable String path, @RequestBody BasicDBObject param) {
+    public ResponseEntity<Object> process(HttpServletRequest request, @PathVariable String path, @RequestBody BasicDBObject param) {
         Optional<Flow> flowExist = flowRepository.findOneByPath(path);
         if (flowExist.isPresent()) {
             Flow flow = flowExist.get();
+            Map<String, String[]> queryParamMap = request.getParameterMap();
             Map<String, Object> account = accountFeignClient.getAccount();
             Binding binding = new Binding();
             binding.setVariable("param", param);
+            binding.setVariable("queryParam", queryParamMap);
             binding.setVariable("account", account);
             binding.setVariable("function", this);
             binding.setVariable("genericService", genericService);
