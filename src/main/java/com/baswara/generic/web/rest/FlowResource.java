@@ -15,10 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Controller for view and managing Log Level at runtime.
@@ -128,13 +125,31 @@ public class FlowResource {
     }
 
     @PostMapping("")
-    public ResponseEntity<Object> save(@RequestBody Flow objParam) {
+    public ResponseEntity<Object> save(@RequestBody BasicDBObject objParamSent) {
+        Flow objParam = new Flow();
+        objParam.setId((String) objParamSent.get("id"));
+        objParam.setPath((String) objParamSent.get("path"));
+        if (objParamSent.get("script") instanceof String) {
+            objParam.setScript((String) objParamSent.get("script"));
+        } else if (objParamSent.get("script") instanceof ArrayList) {
+            List scriptList = (List) objParamSent.get("script");
+            objParam.setScript(String.join("\n", scriptList));
+        }
         Flow result = flowRepository.save(objParam);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PutMapping("")
-    public ResponseEntity<Object> update(@RequestBody Flow objParam) {
+    public ResponseEntity<Object> update(@RequestBody BasicDBObject objParamSent) {
+        Flow objParam = new Flow();
+        objParam.setId((String) objParamSent.get("id"));
+        objParam.setPath((String) objParamSent.get("path"));
+        if (objParamSent.get("script") instanceof String) {
+            objParam.setScript((String) objParamSent.get("script"));
+        } else if (objParamSent.get("script") instanceof ArrayList) {
+            List scriptList = (List) objParamSent.get("script");
+            objParam.setScript(String.join("\n", scriptList));
+        }
         Flow flow = flowRepository.findOne(objParam.getId());
         flow.setPath(objParam.getPath());
         flow.setScript(objParam.getScript());
@@ -143,7 +158,20 @@ public class FlowResource {
     }
 
     @PostMapping("/bulk")
-    public ResponseEntity<Object> saveList(@RequestBody List<Flow> objParamList) {
+    public ResponseEntity<Object> saveList(@RequestBody List<BasicDBObject> objParamListSent) {
+        List<Flow> objParamList = new ArrayList<>();
+        for (BasicDBObject objParamSent : objParamListSent) {
+            Flow objParam = new Flow();
+            objParam.setId((String) objParamSent.get("id"));
+            objParam.setPath((String) objParamSent.get("path"));
+            if (objParamSent.get("script") instanceof String) {
+                objParam.setScript((String) objParamSent.get("script"));
+            } else if (objParamSent.get("script") instanceof ArrayList) {
+                List scriptList = (List) objParamSent.get("script");
+                objParam.setScript(String.join("\n", scriptList));
+            }
+            objParamList.add(objParam);
+        }
         List<Flow> result = flowRepository.save(objParamList);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

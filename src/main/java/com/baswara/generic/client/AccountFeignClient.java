@@ -19,6 +19,9 @@ public interface AccountFeignClient {
     @RequestMapping(method = RequestMethod.POST, value = "/api/account/change-password")
     public Map<String, Object> changePassword(String password);
 
+    @RequestMapping(method = RequestMethod.POST, value = "/api/account/setActive")
+    public Map<String, Object> setActive(@RequestParam("login") String login, @RequestParam("active") boolean active);
+
     @RequestMapping(method = RequestMethod.POST, value = "/api/users")
     public Map<String, Object> createUser(Map<String, Object> userMap);
 

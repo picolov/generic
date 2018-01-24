@@ -83,6 +83,9 @@ public class GenericService {
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
                                         break;
+                                    case "boolean":
+                                        query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
+                                        break;
                                 }
                                 break;
                             case "like":
@@ -95,6 +98,22 @@ public class GenericService {
                                         break;
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
+                                        break;
+                                    case "boolean":
+                                        query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
+                                        break;
+                                }
+                                break;
+                            case "isNot":
+                                switch (attrType) {
+                                    case "string":
+                                        query.addCriteria(Criteria.where(attr).ne(token[2]));
+                                        break;
+                                    case "numeric":
+                                        query.addCriteria(Criteria.where(attr).ne(Integer.parseInt(token[2])));
+                                        break;
+                                    case "boolean":
+                                        query.addCriteria(Criteria.where(attr).ne(Boolean.parseBoolean(token[2])));
                                         break;
                                 }
                                 break;
@@ -245,6 +264,9 @@ public class GenericService {
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
                                         break;
+                                    case "boolean":
+                                        query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
+                                        break;
                                 }
                                 break;
                             case "like":
@@ -257,6 +279,22 @@ public class GenericService {
                                         break;
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
+                                        break;
+                                    case "boolean":
+                                        query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
+                                        break;
+                                }
+                                break;
+                            case "isNot":
+                                switch (attrType) {
+                                    case "string":
+                                        query.addCriteria(Criteria.where(attr).ne(token[2]));
+                                        break;
+                                    case "numeric":
+                                        query.addCriteria(Criteria.where(attr).ne(Integer.parseInt(token[2])));
+                                        break;
+                                    case "boolean":
+                                        query.addCriteria(Criteria.where(attr).ne(Boolean.parseBoolean(token[2])));
                                         break;
                                 }
                                 break;
@@ -377,6 +415,9 @@ public class GenericService {
 
     private void fillObjectBasedOnColumn(Map columnMap, String key, BasicDBObject objParam, BasicDBObject objToSave, Map<String, BasicDBObject> linkToSaveMap) {
         switch ((String) columnMap.get("type")) {
+            case "boolean":
+                objToSave.put(key, Boolean.parseBoolean(objParam.get(key) + ""));
+                break;
             case "numeric":
                 objToSave.put(key, Long.parseLong(objParam.get(key) + ""));
                 break;
