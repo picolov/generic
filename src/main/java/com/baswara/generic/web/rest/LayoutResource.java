@@ -83,6 +83,7 @@ public class LayoutResource {
         Layout layout = layoutRepository.findOne(objParam.getId());
         layout.setName(objParam.getName());
         layout.setTitle(objParam.getTitle());
+        layout.setLang(objParam.getLang());
         layout.setInit(objParam.getInit());
         layout.setViewAs(objParam.getViewAs());
 

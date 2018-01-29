@@ -351,25 +351,47 @@ public class GenericService {
                 result.put("_id", resp.get("_id"));
                 for (String key : meta.getColumns().keySet()) {
                     Map columnMap = meta.getColumns().get(key);
-                    switch ((String) columnMap.get("type")) {
-                        case "ref":
-                            if (resp.get(key) != null && 1 <= level) {
-                                String classRef = (String) columnMap.get("classRef");
-                                result.put(key, getObject(classRef, (String) resp.get(key), 1, level));
-                            } else {
-                                result.put(key, resp.get(key));
-                            }
-                            break;
-                        case "link":
+                    if (columnMap.containsKey("isArray") && (Boolean) columnMap.get("isArray")) {
+                        for (String paramKey : resp.keySet()) {
+                            if (paramKey.startsWith(key + "_")) {
+                                switch ((String) columnMap.get("type")) {
+                                    case "ref":
+                                        if (resp.get(paramKey) != null && 1 <= level) {
+                                            String classRef = (String) columnMap.get("classRef");
+                                            result.put(paramKey, getObject(classRef, (String) resp.get(paramKey), 1, level));
+                                        } else {
+                                            result.put(paramKey, resp.get(paramKey));
+                                        }
+                                        break;
+                                    case "link":
 
-                            break;
-                        default:
-                            result.put(key, resp.get(key));
+                                        break;
+                                    default:
+                                        result.put(paramKey, resp.get(paramKey));
+                                }
+                            }
+                        }
+                    } else if (resp.containsField(key)) {
+                        switch ((String) columnMap.get("type")) {
+                            case "ref":
+                                if (resp.get(key) != null && 1 <= level) {
+                                    String classRef = (String) columnMap.get("classRef");
+                                    result.put(key, getObject(classRef, (String) resp.get(key), 1, level));
+                                } else {
+                                    result.put(key, resp.get(key));
+                                }
+                                break;
+                            case "link":
+
+                                break;
+                            default:
+                                result.put(key, resp.get(key));
+                        }
                     }
                 }
                 resultList.add(result);
             }
-            return respList;
+            return resultList;
         } else {
             throw new MetaClassNotFoundException();
         }
@@ -557,18 +579,39 @@ public class GenericService {
             DBObject resp = findById(_class, id);
             for (String key : meta.getColumns().keySet()) {
                 Map columnMap = meta.getColumns().get(key);
-                switch ((String) columnMap.get("type")) {
-                    case "ref":
-                        if (resp.get(key) != null && currLevel+1 <= maxLevel) {
-                            String classRef = (String) columnMap.get("classRef");
-                            result.put(key, getObject(classRef, (String) resp.get(key), currLevel + 1, maxLevel));
-                        } else {
-                            result.put(key, resp.get(key));
+                if (columnMap.containsKey("isArray") && (Boolean) columnMap.get("isArray")) {
+                    for (String paramKey : resp.keySet()) {
+                        if (paramKey.startsWith(key + "_")) {
+                            switch ((String) columnMap.get("type")) {
+                                case "ref":
+                                    if (resp.get(paramKey) != null && currLevel+1 <= maxLevel) {
+                                        String classRef = (String) columnMap.get("classRef");
+                                        result.put(paramKey, getObject(classRef, (String) resp.get(paramKey), currLevel + 1, maxLevel));
+                                    } else {
+                                        result.put(paramKey, resp.get(paramKey));
+                                    }
+                                    break;
+                                default:
+                                    result.put(paramKey, resp.get(paramKey));
+                            }
                         }
-                        break;
-                    default:
-                        result.put(key, resp.get(key));
+                    }
+                } else if (resp.containsField(key)) {
+                    switch ((String) columnMap.get("type")) {
+                        case "ref":
+                            if (resp.get(key) != null && currLevel+1 <= maxLevel) {
+                                String classRef = (String) columnMap.get("classRef");
+                                result.put(key, getObject(classRef, (String) resp.get(key), currLevel + 1, maxLevel));
+                            } else {
+                                result.put(key, resp.get(key));
+                            }
+                            break;
+                        default:
+                            result.put(key, resp.get(key));
+                    }
                 }
+
+
             }
             return result;
         } else {
