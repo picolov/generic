@@ -85,9 +85,7 @@ public class LayoutResource {
         layout.setTitle(objParam.getTitle());
         layout.setLang(objParam.getLang());
         layout.setInit(objParam.getInit());
-        layout.setViewAs(objParam.getViewAs());
-
-        layout.setContent(objParam.getContent());
+        layout.setContainer(objParam.getContainer());
         layoutRepository.save(layout);
         return new ResponseEntity<>(layout, HttpStatus.OK);
     }

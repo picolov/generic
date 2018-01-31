@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,11 +26,9 @@ public class Layout implements Serializable {
 
     private String lang;
 
-    private String viewAs;
-
     private List<Map<String, Object>> init = new ArrayList<>();
 
-    private List<Map<String, Object>> content = new ArrayList<>();
+    private Map<String, Object> container = new HashMap<>();
 
     public String getId() {
         return id;
@@ -63,14 +62,6 @@ public class Layout implements Serializable {
         this.title = title;
     }
 
-    public String getViewAs() {
-        return viewAs;
-    }
-
-    public void setViewAs(String viewAs) {
-        this.viewAs = viewAs;
-    }
-
     public List<Map<String, Object>> getInit() {
         return init;
     }
@@ -79,11 +70,11 @@ public class Layout implements Serializable {
         this.init = init;
     }
 
-    public List<Map<String, Object>> getContent() {
-        return content;
+    public Map<String, Object> getContainer() {
+        return container;
     }
 
-    public void setContent(List<Map<String, Object>> content) {
-        this.content = content;
+    public void setContainer(Map<String, Object> container) {
+        this.container = container;
     }
 }
