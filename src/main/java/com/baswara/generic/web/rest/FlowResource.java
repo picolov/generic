@@ -10,6 +10,7 @@ import com.baswara.generic.service.LayoutService;
 import com.mongodb.BasicDBObject;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,13 +33,15 @@ public class FlowResource {
 
     private final GenericService genericService;
     private final LayoutService layoutService;
+    private final MongoTemplate mongoTemplate;
 
-    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, LayoutService layoutService, AccountFeignClient accountFeignClient) {
+    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, LayoutService layoutService, AccountFeignClient accountFeignClient, MongoTemplate mongoTemplate) {
         this.layoutRepository = layoutRepository;
         this.flowRepository = flowRepository;
         this.genericService = genericService;
         this.layoutService = layoutService;
         this.accountFeignClient = accountFeignClient;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @DeleteMapping("")
@@ -98,6 +101,7 @@ public class FlowResource {
             binding.setVariable("genericService", genericService);
             binding.setVariable("layoutService", layoutService);
             binding.setVariable("uaaService", accountFeignClient);
+            binding.setVariable("mongo", mongoTemplate);
             binding.setVariable("path", path);
             GroovyShell shell = new GroovyShell(binding);
             Object returnVal = shell.evaluate(flow.getScript());
