@@ -63,7 +63,8 @@ public class GenericService {
                 for (String criteriaToken:criteriaTokenArr) {
                     String[] token = criteriaToken.split(";");
                     String attr = token[0];
-                    if (!meta.getColumns().containsKey(attr)) continue;
+                    String[] attrToken = attr.split("\\.");
+                    if (!meta.getColumns().containsKey(attrToken[0])) continue;
                     Map<String, Object> attrMap = meta.getColumns().get(attr);
                     String attrType = (String) attrMap.get("type");
                     if (attrType.equals("link")) {
@@ -243,7 +244,8 @@ public class GenericService {
                 for (String criteriaToken : criteriaTokenArr) {
                     String[] token = criteriaToken.split(";");
                     String attr = token[0];
-                    if (!meta.getColumns().containsKey(attr)) continue;
+                    String[] attrToken = attr.split("\\.");
+                    if (!meta.getColumns().containsKey(attrToken[0])) continue;
                     Map<String, Object> attrMap = meta.getColumns().get(attr);
                     String attrType = (String) attrMap.get("type");
                     if (attrType.equals("link")) {
