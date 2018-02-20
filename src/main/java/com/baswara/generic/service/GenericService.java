@@ -350,6 +350,7 @@ public class GenericService {
                     }
                 }
             }
+            System.out.println(query);
             query.with(pageable);
             List<DBObject> respList = mongoTemplate.find(query, DBObject.class, _class);
             for (DBObject resp:respList) {
