@@ -78,6 +78,7 @@ public class GenericService {
                             case "filter":
                                 switch (attrType) {
                                     case "string":
+                                    case "ref":
                                         query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
                                         break;
                                     case "numeric":
@@ -94,6 +95,7 @@ public class GenericService {
                             case "is":
                                 switch (attrType) {
                                     case "string":
+                                    case "ref":
                                         query.addCriteria(Criteria.where(attr).is(token[2]));
                                         break;
                                     case "numeric":
@@ -107,6 +109,7 @@ public class GenericService {
                             case "isNot":
                                 switch (attrType) {
                                     case "string":
+                                    case "ref":
                                         query.addCriteria(Criteria.where(attr).ne(token[2]));
                                         break;
                                     case "numeric":
@@ -259,6 +262,7 @@ public class GenericService {
                             case "filter":
                                 switch (attrType) {
                                     case "string":
+                                    case "ref":
                                         query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
                                         break;
                                     case "numeric":
@@ -275,6 +279,7 @@ public class GenericService {
                             case "is":
                                 switch (attrType) {
                                     case "string":
+                                    case "ref":
                                         query.addCriteria(Criteria.where(attr).is(token[2]));
                                         break;
                                     case "numeric":
@@ -288,6 +293,7 @@ public class GenericService {
                             case "isNot":
                                 switch (attrType) {
                                     case "string":
+                                    case "ref":
                                         query.addCriteria(Criteria.where(attr).ne(token[2]));
                                         break;
                                     case "numeric":
@@ -610,8 +616,6 @@ public class GenericService {
                             result.put(key, resp.get(key));
                     }
                 }
-
-
             }
             return result;
         } else {

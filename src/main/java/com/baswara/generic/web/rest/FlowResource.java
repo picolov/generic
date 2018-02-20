@@ -83,23 +83,6 @@ public class FlowResource {
         }
     }
 
-    public Object testScript(BasicDBObject param, Map<String, Object> account, String path) {
-        Object function = this;
-        AccountFeignClient uaaService = null;
-        // GenericService genericService
-        // LayoutService layoutService
-        // -----------------------------------------TEST HERE----------------------------------------------------
-        String username = uaaService.registerUser(param);
-        if (!username.isEmpty()) {
-            BasicDBObject user = new BasicDBObject();
-            user.put("userId", param.get("login"));
-            user.put("email", param.get("email"));
-            user.put("phone", param.get("phone"));
-            genericService.saveModel("userProfile", user);
-        }
-        return username;
-    }
-
     @PostMapping("/process/{path}")
     public ResponseEntity<Object> process(HttpServletRequest request, @PathVariable String path, @RequestBody BasicDBObject param) {
         Optional<Flow> flowExist = flowRepository.findOneByPath(path);
@@ -121,6 +104,18 @@ public class FlowResource {
             return new ResponseEntity<>(returnVal, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
+        }
+    }
+
+    public String append(String source, String str, String separator) {
+        if (str == null) { return source; }
+        else {
+            if (source != null && !source.trim().isEmpty()) {
+                source = str;
+            } else {
+                source += separator + str;
+            }
+            return source;
         }
     }
 
