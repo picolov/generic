@@ -65,7 +65,7 @@ public class GenericService {
                     String attr = token[0];
                     String[] attrToken = attr.split("\\.");
                     if (!meta.getColumns().containsKey(attrToken[0])) continue;
-                    Map<String, Object> attrMap = meta.getColumns().get(attr);
+                    Map<String, Object> attrMap = meta.getColumns().get(attrToken[0]);
                     String attrType = (String) attrMap.get("type");
                     if (attrType.equals("link")) {
                         // get all id in relation link table which have the partner is as requested
@@ -246,7 +246,7 @@ public class GenericService {
                     String attr = token[0];
                     String[] attrToken = attr.split("\\.");
                     if (!meta.getColumns().containsKey(attrToken[0])) continue;
-                    Map<String, Object> attrMap = meta.getColumns().get(attr);
+                    Map<String, Object> attrMap = meta.getColumns().get(attrToken[0]);
                     String attrType = (String) attrMap.get("type");
                     if (attrType.equals("link")) {
                         // get all id in relation link table which have the partner is as requested
