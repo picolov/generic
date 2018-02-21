@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -34,6 +35,7 @@ public class FlowResource {
     private final GenericService genericService;
     private final LayoutService layoutService;
     private final MongoTemplate mongoTemplate;
+    private final SimpleDateFormat sdfDateDataType = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, LayoutService layoutService, AccountFeignClient accountFeignClient, MongoTemplate mongoTemplate) {
         this.layoutRepository = layoutRepository;
@@ -42,6 +44,7 @@ public class FlowResource {
         this.layoutService = layoutService;
         this.accountFeignClient = accountFeignClient;
         this.mongoTemplate = mongoTemplate;
+        sdfDateDataType.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     @DeleteMapping("")
@@ -103,6 +106,7 @@ public class FlowResource {
             binding.setVariable("uaaService", accountFeignClient);
             binding.setVariable("mongo", mongoTemplate);
             binding.setVariable("path", path);
+            binding.setVariable("sdf", sdfDateDataType);
             GroovyShell shell = new GroovyShell(binding);
             Object returnVal = shell.evaluate(flow.getScript());
             return new ResponseEntity<>(returnVal, HttpStatus.OK);
