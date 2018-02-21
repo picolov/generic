@@ -115,9 +115,9 @@ public class FlowResource {
         if (str == null) { return source; }
         else {
             if (source != null && !source.trim().isEmpty()) {
-                source = str;
-            } else {
                 source += separator + str;
+            } else {
+                source = str;
             }
             return source;
         }
