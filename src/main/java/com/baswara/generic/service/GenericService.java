@@ -65,7 +65,7 @@ public class GenericService {
                     String attr = token[0];
                     String[] attrToken = attr.split("\\.");
                     attrToken = attrToken[0].split("_");
-                    if (!meta.getColumns().containsKey(attrToken[0])) continue;
+                    if (attrToken[0] == null || (!attrToken[0].equals("_id") && !meta.getColumns().containsKey(attrToken[0]))) continue;
                     Map<String, Object> attrMap = meta.getColumns().get(attrToken[0]);
                     String attrType = (String) attrMap.get("type");
                     if (attrType.equals("link")) {
@@ -247,7 +247,7 @@ public class GenericService {
                     String attr = token[0];
                     String[] attrToken = attr.split("\\.");
                     attrToken = attrToken[0].split("_");
-                    if (!meta.getColumns().containsKey(attrToken[0])) continue;
+                    if (attrToken[0] == null || (!attrToken[0].equals("_id") && !meta.getColumns().containsKey(attrToken[0]))) continue;
                     Map<String, Object> attrMap = meta.getColumns().get(attrToken[0]);
                     String attrType = (String) attrMap.get("type");
                     if (attrType.equals("link")) {
