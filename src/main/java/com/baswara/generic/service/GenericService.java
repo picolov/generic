@@ -354,7 +354,7 @@ public class GenericService {
                     }
                 }
             }
-            System.out.println(query);
+//            System.out.println(query);
             query.with(pageable);
             List<DBObject> respList = mongoTemplate.find(query, DBObject.class, _class);
             for (DBObject resp:respList) {
@@ -485,6 +485,10 @@ public class GenericService {
                             // none will be saved if sdf parse failed and number string parse failed
                         }
                     }
+                } else if (objParam.get(key) instanceof Long || objParam.get(key) instanceof Integer) {
+                    Date date = new Date();
+                    date.setTime((Long) objParam.get(key));
+                    objToSave.put(key, date.getTime());
                 }
                 break;
             case "link":
