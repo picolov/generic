@@ -582,7 +582,7 @@ public class GenericService {
     }
 
     public List<DBObject> saveList(String _class, List<DBObject> objParamList) {
-        mongoTemplate.save(objParamList, _class);
+        mongoTemplate.insert(objParamList, _class);
         return objParamList;
     }
 
