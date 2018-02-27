@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -84,7 +85,7 @@ public class GenericService {
                                         query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
                                         break;
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
                                     case "boolean":
                                         query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
@@ -101,7 +102,7 @@ public class GenericService {
                                         query.addCriteria(Criteria.where(attr).is(token[2]));
                                         break;
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
                                     case "boolean":
                                         query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
@@ -115,7 +116,7 @@ public class GenericService {
                                         query.addCriteria(Criteria.where(attr).ne(token[2]));
                                         break;
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).ne(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).ne(new BigDecimal(token[2])));
                                         break;
                                     case "boolean":
                                         query.addCriteria(Criteria.where(attr).ne(Boolean.parseBoolean(token[2])));
@@ -125,42 +126,42 @@ public class GenericService {
                             case "gt":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gt(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).gt(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "gte":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gte(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).gte(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "lt":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).lt(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).lt(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "lte":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).lte(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).lte(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "btw":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gte(Integer.parseInt(token[2])).lte(Integer.parseInt(token[3])));
+                                        query.addCriteria(Criteria.where(attr).gte(new BigDecimal(token[2])).lte(new BigDecimal(token[3])));
                                         break;
                                 }
                                 break;
                             case "btwx":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gt(Integer.parseInt(token[2])).lt(Integer.parseInt(token[3])));
+                                        query.addCriteria(Criteria.where(attr).gt(new BigDecimal(token[2])).lt(new BigDecimal(token[3])));
                                         break;
                                 }
                                 break;
@@ -270,7 +271,7 @@ public class GenericService {
                                         query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
                                         break;
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
                                     case "boolean":
                                         query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
@@ -287,7 +288,7 @@ public class GenericService {
                                         query.addCriteria(Criteria.where(attr).is(token[2]));
                                         break;
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).is(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
                                     case "boolean":
                                         query.addCriteria(Criteria.where(attr).is(Boolean.parseBoolean(token[2])));
@@ -301,7 +302,7 @@ public class GenericService {
                                         query.addCriteria(Criteria.where(attr).ne(token[2]));
                                         break;
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).ne(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).ne(new BigDecimal(token[2])));
                                         break;
                                     case "boolean":
                                         query.addCriteria(Criteria.where(attr).ne(Boolean.parseBoolean(token[2])));
@@ -311,42 +312,42 @@ public class GenericService {
                             case "gt":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gt(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).gt(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "gte":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gte(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).gte(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "lt":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).lt(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).lt(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "lte":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).lte(Integer.parseInt(token[2])));
+                                        query.addCriteria(Criteria.where(attr).lte(new BigDecimal(token[2])));
                                         break;
                                 }
                                 break;
                             case "btw":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gte(Integer.parseInt(token[2])).lte(Integer.parseInt(token[3])));
+                                        query.addCriteria(Criteria.where(attr).gte(new BigDecimal(token[2])).lte(new BigDecimal(token[3])));
                                         break;
                                 }
                                 break;
                             case "btwx":
                                 switch (attrType) {
                                     case "numeric":
-                                        query.addCriteria(Criteria.where(attr).gt(Integer.parseInt(token[2])).lt(Integer.parseInt(token[3])));
+                                        query.addCriteria(Criteria.where(attr).gt(new BigDecimal(token[2])).lt(new BigDecimal(token[3])));
                                         break;
                                 }
                                 break;
@@ -452,7 +453,7 @@ public class GenericService {
                 objToSave.put(key, Boolean.parseBoolean(objParam.get(key) + ""));
                 break;
             case "numeric":
-                objToSave.put(key, Long.parseLong(objParam.get(key) + ""));
+                objToSave.put(key, new BigDecimal(objParam.get(key) + ""));
                 break;
             case "ref":
                 if (objParam.get(key) instanceof String) {
