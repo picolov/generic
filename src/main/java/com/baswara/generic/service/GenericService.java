@@ -375,6 +375,9 @@ public class GenericService {
                                             result.put(paramKey, resp.get(paramKey));
                                         }
                                         break;
+                                    case "numeric":
+                                        result.put(key, new BigDecimal((String) resp.get(paramKey)));
+                                        break;
                                     case "link":
 
                                         break;
@@ -393,8 +396,10 @@ public class GenericService {
                                     result.put(key, resp.get(key));
                                 }
                                 break;
+                            case "numeric":
+                                result.put(key, new BigDecimal((String) resp.get(key)));
+                                break;
                             case "link":
-
                                 break;
                             default:
                                 result.put(key, resp.get(key));
@@ -607,6 +612,9 @@ public class GenericService {
                                         result.put(paramKey, resp.get(paramKey));
                                     }
                                     break;
+                                case "numeric":
+                                    result.put(key, new BigDecimal((String) resp.get(paramKey)));
+                                    break;
                                 default:
                                     result.put(paramKey, resp.get(paramKey));
                             }
@@ -621,6 +629,9 @@ public class GenericService {
                             } else {
                                 result.put(key, resp.get(key));
                             }
+                            break;
+                        case "numeric":
+                            result.put(key, new BigDecimal((String) resp.get(key)));
                             break;
                         default:
                             result.put(key, resp.get(key));
