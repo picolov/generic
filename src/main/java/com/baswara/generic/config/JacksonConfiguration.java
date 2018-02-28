@@ -1,5 +1,6 @@
 package com.baswara.generic.config;
 
+import com.baswara.generic.util.BigDecimalSerializer;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 
@@ -9,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.zalando.problem.ProblemModule;
 import org.zalando.problem.validation.ConstraintViolationProblemModule;
+
+import java.math.BigDecimal;
 
 @Configuration
 public class JacksonConfiguration {
@@ -41,6 +44,7 @@ public class JacksonConfiguration {
     public Jackson2ObjectMapperBuilder jacksonBuilder() {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
         builder.serializerByType(ObjectId.class, new ToStringSerializer());
+        builder.serializerByType(BigDecimal.class, new BigDecimalSerializer());
         return builder;
     }
 
