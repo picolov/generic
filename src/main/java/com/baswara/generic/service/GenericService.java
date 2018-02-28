@@ -415,7 +415,35 @@ public class GenericService {
     }
 
     public DBObject findById(String _class, String id) {
-        return mongoTemplate.findById(id, DBObject.class, _class);
+        Optional<Meta> metaExist = metaRepository.findOneByName(_class);
+        if (metaExist.isPresent()) {
+            Meta meta = metaExist.get();
+            meta.getColumns().put("_id", ID_MAP);
+            BasicDBObject obj = (BasicDBObject) mongoTemplate.findById(id, DBObject.class, _class);
+            for (String key : meta.getColumns().keySet()) {
+                Map columnMap = meta.getColumns().get(key);
+                if (columnMap.containsKey("isArray") && (Boolean) columnMap.get("isArray")) {
+                    for (String paramKey : obj.keySet()) {
+                        if (paramKey.startsWith(key + "_")) {
+                            switch ((String) columnMap.get("type")) {
+                                case "numeric":
+                                    obj.put(paramKey, new BigDecimal((String) obj.get(paramKey)));
+                                    break;
+                            }
+                        }
+                    }
+                } else if (obj.containsField(key)) {
+                    switch ((String) columnMap.get("type")) {
+                        case "numeric":
+                            obj.put(key, new BigDecimal((String) obj.get(key)));
+                            break;
+                    }
+                }
+            }
+            return obj;
+        } else {
+            throw new MetaClassNotFoundException();
+        }
     }
 
     public DBObject saveModel(String _class, BasicDBObject objParam) {
