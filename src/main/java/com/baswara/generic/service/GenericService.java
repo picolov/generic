@@ -641,7 +641,12 @@ public class GenericService {
                                     }
                                     break;
                                 case "numeric":
-                                    result.put(key, new BigDecimal((String) resp.get(paramKey)));
+                                    Object val = resp.get(paramKey);
+                                    if (val instanceof String) {
+                                        result.put(key, new BigDecimal((String) val));
+                                    } else {
+                                        result.put(key, val);
+                                    }
                                     break;
                                 default:
                                     result.put(paramKey, resp.get(paramKey));
@@ -659,7 +664,12 @@ public class GenericService {
                             }
                             break;
                         case "numeric":
-                            result.put(key, new BigDecimal((String) resp.get(key)));
+                            Object val = resp.get(key);
+                            if (val instanceof String) {
+                                result.put(key, new BigDecimal((String) val));
+                            } else {
+                                result.put(key, val);
+                            }
                             break;
                         default:
                             result.put(key, resp.get(key));
