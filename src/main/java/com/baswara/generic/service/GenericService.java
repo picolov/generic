@@ -84,6 +84,9 @@ public class GenericService {
                                     case "ref":
                                         query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
                                         break;
+                                    case "ref-list":
+                                        query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
+                                        break;
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
@@ -101,6 +104,9 @@ public class GenericService {
                                     case "ref":
                                         query.addCriteria(Criteria.where(attr).is(token[2]));
                                         break;
+                                    case "ref-list":
+                                        query.addCriteria(Criteria.where(attr).is(token[2]));
+                                        break;
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
@@ -113,6 +119,9 @@ public class GenericService {
                                 switch (attrType) {
                                     case "string":
                                     case "ref":
+                                        query.addCriteria(Criteria.where(attr).ne(token[2]));
+                                        break;
+                                    case "ref-list":
                                         query.addCriteria(Criteria.where(attr).ne(token[2]));
                                         break;
                                     case "numeric":
@@ -270,6 +279,9 @@ public class GenericService {
                                     case "ref":
                                         query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
                                         break;
+                                    case "ref-list":
+                                        query.addCriteria(Criteria.where(attr).regex(".*" + token[2] + ".*"));
+                                        break;
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
@@ -287,6 +299,9 @@ public class GenericService {
                                     case "ref":
                                         query.addCriteria(Criteria.where(attr).is(token[2]));
                                         break;
+                                    case "ref-list":
+                                        query.addCriteria(Criteria.where(attr).is(token[2]));
+                                        break;
                                     case "numeric":
                                         query.addCriteria(Criteria.where(attr).is(new BigDecimal(token[2])));
                                         break;
@@ -299,6 +314,9 @@ public class GenericService {
                                 switch (attrType) {
                                     case "string":
                                     case "ref":
+                                        query.addCriteria(Criteria.where(attr).ne(token[2]));
+                                        break;
+                                    case "ref-list":
                                         query.addCriteria(Criteria.where(attr).ne(token[2]));
                                         break;
                                     case "numeric":
@@ -375,6 +393,19 @@ public class GenericService {
                                             result.put(paramKey, resp.get(paramKey));
                                         }
                                         break;
+                                    case "ref-list":
+                                        if (resp.get(paramKey) != null && 1 <= level) {
+                                            String classRef = (String) columnMap.get("classRef");
+                                            List<Object> respListValue = (ArrayList) resp.get(paramKey);
+                                            List<Object> listValue = new ArrayList<>();
+                                            for (Object respValue: respListValue) {
+                                                listValue.add(getObject(classRef, (String) respValue, 1, level));
+                                            }
+                                            result.put(paramKey, listValue);
+                                        } else {
+                                            result.put(paramKey, resp.get(paramKey));
+                                        }
+                                        break;
                                     case "numeric":
                                         result.put(key, new BigDecimal((String) resp.get(paramKey)));
                                         break;
@@ -392,6 +423,19 @@ public class GenericService {
                                 if (resp.get(key) != null && 1 <= level) {
                                     String classRef = (String) columnMap.get("classRef");
                                     result.put(key, getObject(classRef, (String) resp.get(key), 1, level));
+                                } else {
+                                    result.put(key, resp.get(key));
+                                }
+                                break;
+                            case "ref-list":
+                                if (resp.get(key) != null && 1 <= level) {
+                                    String classRef = (String) columnMap.get("classRef");
+                                    List<Object> respListValue = (ArrayList) resp.get(key);
+                                    List<Object> listValue = new ArrayList<>();
+                                    for (Object respValue: respListValue) {
+                                        listValue.add(getObject(classRef, (String) respValue, 1, level));
+                                    }
+                                    result.put(key, listValue);
                                 } else {
                                     result.put(key, resp.get(key));
                                 }
@@ -496,6 +540,20 @@ public class GenericService {
                     if (value.containsKey("_id")) objToSave.put(key, value.get("_id"));
                     else if (value.containsKey("id")) objToSave.put(key, value.get("id"));
                 }
+                break;
+            case "ref-list":
+                List<Object> valueRefList = (ArrayList) objParam.get(key);
+                List<String> convertList = new ArrayList<>();
+                for (Object value:valueRefList) {
+                    if (value instanceof String) {
+                        convertList.add((String) value);
+                    } else if (value instanceof Map) {
+                        Map valueMap = (Map) value;
+                        if (valueMap.containsKey("_id")) convertList.add((String) valueMap.get("_id"));
+                        else if (valueMap.containsKey("id")) convertList.add((String) valueMap.get("id"));
+                    }
+                }
+                objToSave.put(key, convertList);
                 break;
             case "string":
                 objToSave.put(key, objParam.get(key));
@@ -640,6 +698,19 @@ public class GenericService {
                                         result.put(paramKey, resp.get(paramKey));
                                     }
                                     break;
+                                case "ref-list":
+                                    if (resp.get(paramKey) != null && currLevel+1 <= maxLevel) {
+                                        String classRef = (String) columnMap.get("classRef");
+                                        List<Object> respListValue = (ArrayList) resp.get(paramKey);
+                                        List<Object> listValue = new ArrayList<>();
+                                        for (Object respValue: respListValue) {
+                                            listValue.add(getObject(classRef, (String) respValue, currLevel + 1, maxLevel));
+                                        }
+                                        result.put(paramKey, listValue);
+                                    } else {
+                                        result.put(paramKey, resp.get(paramKey));
+                                    }
+                                    break;
                                 case "numeric":
                                     Object val = resp.get(paramKey);
                                     if (val instanceof String) {
@@ -659,6 +730,19 @@ public class GenericService {
                             if (resp.get(key) != null && currLevel+1 <= maxLevel) {
                                 String classRef = (String) columnMap.get("classRef");
                                 result.put(key, getObject(classRef, (String) resp.get(key), currLevel + 1, maxLevel));
+                            } else {
+                                result.put(key, resp.get(key));
+                            }
+                            break;
+                        case "ref-list":
+                            if (resp.get(key) != null && currLevel+1 <= maxLevel) {
+                                String classRef = (String) columnMap.get("classRef");
+                                List<Object> respListValue = (ArrayList) resp.get(key);
+                                List<Object> listValue = new ArrayList<>();
+                                for (Object respValue: respListValue) {
+                                    listValue.add(getObject(classRef, (String) respValue, currLevel + 1, maxLevel));
+                                }
+                                result.put(key, listValue);
                             } else {
                                 result.put(key, resp.get(key));
                             }
