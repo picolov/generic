@@ -231,7 +231,7 @@ public class GenericService {
     }
 
     public List<DBObject> findAllPaging(String _class, String criteria, int level, int page, int size, String sort, String fields) {
-        List<String> fieldList = null;
+        List<String> fieldList = new ArrayList<>();
         if (fields != null) {
             String[] fieldToken = fields.split(",");
             fieldList = Arrays.asList(fieldToken);
@@ -385,7 +385,7 @@ public class GenericService {
                 DBObject result = new BasicDBObject();
                 result.put("_id", resp.get("_id"));
                 for (String key : meta.getColumns().keySet()) {
-                    if (fieldList != null && !fieldList.contains(key)) continue;
+                    if (!fieldList.isEmpty() && !fieldList.contains(key)) continue;
                     Map columnMap = meta.getColumns().get(key);
                     if (columnMap.containsKey("isArray") && (Boolean) columnMap.get("isArray")) {
                         for (String paramKey : resp.keySet()) {
@@ -394,7 +394,14 @@ public class GenericService {
                                     case "ref":
                                         if (resp.get(paramKey) != null && 1 <= level) {
                                             String classRef = (String) columnMap.get("classRef");
-                                            result.put(paramKey, getObject(classRef, (String) resp.get(paramKey), 1, level));
+                                            List<String> fieldListForKey = new ArrayList<>();
+                                            for (String fieldKey:fieldList) {
+                                                String[] fieldToken = fieldKey.split("\\.", 2);
+                                                if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                                    fieldListForKey.add(fieldToken[1]);
+                                                }
+                                            }
+                                            result.put(paramKey, getObject(classRef, (String) resp.get(paramKey), 1, level, fieldListForKey));
                                         } else {
                                             result.put(paramKey, resp.get(paramKey));
                                         }
@@ -405,7 +412,14 @@ public class GenericService {
                                             List<Object> respListValue = (ArrayList) resp.get(paramKey);
                                             List<Object> listValue = new ArrayList<>();
                                             for (Object respValue: respListValue) {
-                                                listValue.add(getObject(classRef, (String) respValue, 1, level));
+                                                List<String> fieldListForKey = new ArrayList<>();
+                                                for (String fieldKey:fieldList) {
+                                                    String[] fieldToken = fieldKey.split("\\.", 2);
+                                                    if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                                        fieldListForKey.add(fieldToken[1]);
+                                                    }
+                                                }
+                                                listValue.add(getObject(classRef, (String) respValue, 1, level, fieldListForKey));
                                             }
                                             result.put(paramKey, listValue);
                                         } else {
@@ -428,7 +442,14 @@ public class GenericService {
                             case "ref":
                                 if (resp.get(key) != null && 1 <= level) {
                                     String classRef = (String) columnMap.get("classRef");
-                                    result.put(key, getObject(classRef, (String) resp.get(key), 1, level));
+                                    List<String> fieldListForKey = new ArrayList<>();
+                                    for (String fieldKey:fieldList) {
+                                        String[] fieldToken = fieldKey.split("\\.", 2);
+                                        if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                            fieldListForKey.add(fieldToken[1]);
+                                        }
+                                    }
+                                    result.put(key, getObject(classRef, (String) resp.get(key), 1, level, fieldListForKey));
                                 } else {
                                     result.put(key, resp.get(key));
                                 }
@@ -439,7 +460,14 @@ public class GenericService {
                                     List<Object> respListValue = (ArrayList) resp.get(key);
                                     List<Object> listValue = new ArrayList<>();
                                     for (Object respValue: respListValue) {
-                                        listValue.add(getObject(classRef, (String) respValue, 1, level));
+                                        List<String> fieldListForKey = new ArrayList<>();
+                                        for (String fieldKey:fieldList) {
+                                            String[] fieldToken = fieldKey.split("\\.", 2);
+                                            if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                                fieldListForKey.add(fieldToken[1]);
+                                            }
+                                        }
+                                        listValue.add(getObject(classRef, (String) respValue, 1, level, fieldListForKey));
                                     }
                                     result.put(key, listValue);
                                 } else {
@@ -683,7 +711,7 @@ public class GenericService {
         return objParamList;
     }
 
-    public DBObject getObject(String _class, String id, int currLevel, int maxLevel) {
+    public DBObject getObject(String _class, String id, int currLevel, int maxLevel, List<String> fieldList) {
         Optional<Meta> metaExist = metaRepository.findOneByName(_class);
         if (metaExist.isPresent()) {
             Meta meta = metaExist.get();
@@ -691,6 +719,7 @@ public class GenericService {
             DBObject result = new BasicDBObject();
             DBObject resp = findById(_class, id);
             for (String key : meta.getColumns().keySet()) {
+                if (!fieldList.isEmpty() && !fieldList.contains(key)) continue;
                 Map columnMap = meta.getColumns().get(key);
                 if (columnMap.containsKey("isArray") && (Boolean) columnMap.get("isArray")) {
                     for (String paramKey : resp.keySet()) {
@@ -699,7 +728,14 @@ public class GenericService {
                                 case "ref":
                                     if (resp.get(paramKey) != null && currLevel+1 <= maxLevel) {
                                         String classRef = (String) columnMap.get("classRef");
-                                        result.put(paramKey, getObject(classRef, (String) resp.get(paramKey), currLevel + 1, maxLevel));
+                                        List<String> fieldListForKey = new ArrayList<>();
+                                        for (String fieldKey:fieldList) {
+                                            String[] fieldToken = fieldKey.split("\\.", 2);
+                                            if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                                fieldListForKey.add(fieldToken[1]);
+                                            }
+                                        }
+                                        result.put(paramKey, getObject(classRef, (String) resp.get(paramKey), currLevel + 1, maxLevel, fieldListForKey));
                                     } else {
                                         result.put(paramKey, resp.get(paramKey));
                                     }
@@ -710,7 +746,14 @@ public class GenericService {
                                         List<Object> respListValue = (ArrayList) resp.get(paramKey);
                                         List<Object> listValue = new ArrayList<>();
                                         for (Object respValue: respListValue) {
-                                            listValue.add(getObject(classRef, (String) respValue, currLevel + 1, maxLevel));
+                                            List<String> fieldListForKey = new ArrayList<>();
+                                            for (String fieldKey:fieldList) {
+                                                String[] fieldToken = fieldKey.split("\\.", 2);
+                                                if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                                    fieldListForKey.add(fieldToken[1]);
+                                                }
+                                            }
+                                            listValue.add(getObject(classRef, (String) respValue, currLevel + 1, maxLevel, fieldListForKey));
                                         }
                                         result.put(paramKey, listValue);
                                     } else {
@@ -735,7 +778,14 @@ public class GenericService {
                         case "ref":
                             if (resp.get(key) != null && currLevel+1 <= maxLevel) {
                                 String classRef = (String) columnMap.get("classRef");
-                                result.put(key, getObject(classRef, (String) resp.get(key), currLevel + 1, maxLevel));
+                                List<String> fieldListForKey = new ArrayList<>();
+                                for (String fieldKey:fieldList) {
+                                    String[] fieldToken = fieldKey.split("\\.", 2);
+                                    if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                        fieldListForKey.add(fieldToken[1]);
+                                    }
+                                }
+                                result.put(key, getObject(classRef, (String) resp.get(key), currLevel + 1, maxLevel, fieldListForKey));
                             } else {
                                 result.put(key, resp.get(key));
                             }
@@ -746,7 +796,14 @@ public class GenericService {
                                 List<Object> respListValue = (ArrayList) resp.get(key);
                                 List<Object> listValue = new ArrayList<>();
                                 for (Object respValue: respListValue) {
-                                    listValue.add(getObject(classRef, (String) respValue, currLevel + 1, maxLevel));
+                                    List<String> fieldListForKey = new ArrayList<>();
+                                    for (String fieldKey:fieldList) {
+                                        String[] fieldToken = fieldKey.split("\\.", 2);
+                                        if (fieldKey.contains(".") && fieldToken[0].equals(key)) {
+                                            fieldListForKey.add(fieldToken[1]);
+                                        }
+                                    }
+                                    listValue.add(getObject(classRef, (String) respValue, currLevel + 1, maxLevel, fieldListForKey));
                                 }
                                 result.put(key, listValue);
                             } else {

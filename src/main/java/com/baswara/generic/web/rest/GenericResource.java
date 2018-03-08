@@ -82,17 +82,17 @@ public class GenericResource {
         @PathVariable String _class, @PathVariable String id,
         @RequestParam(value = "level", required = false, defaultValue = "1") int level,
         @RequestParam(value = "fields", required = false) String fields) {
-        List<String> fieldList = null;
+        List<String> fieldList = new ArrayList<>();
         if (fields != null) {
             String[] fieldToken = fields.split(",");
             fieldList = Arrays.asList(fieldToken);
         }
-        DBObject resp = genericService.getObject(_class, id, 0, level);
+        DBObject resp = genericService.getObject(_class, id, 0, level, fieldList);
         DBObject result = new BasicDBObject();
         result.put("_id", resp.get("_id"));
         for (String key : resp.keySet()) {
             String[] keyToken = key.split("_");
-            if (fieldList != null && !fieldList.contains(keyToken[0])) continue;
+            if (!fieldList.isEmpty() && !fieldList.contains(keyToken[0])) continue;
             result.put(key, resp.get(key));
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
