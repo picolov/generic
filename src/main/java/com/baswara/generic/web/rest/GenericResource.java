@@ -48,25 +48,29 @@ public class GenericResource {
     }
 
     @GetMapping("/{_class}")
-    public ResponseEntity<Object> findAll(@PathVariable String _class,
-                                          @RequestParam(value = "level", required = false, defaultValue = "1") int level,
-                                          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                          @RequestParam(value = "size", required = false, defaultValue = "100") int size,
-                                          @RequestParam(value = "sort", required = false) String sort,
-                                          @RequestParam(value = "criteria", required = false) String criteria) {
-        List<DBObject> resultList = genericService.findAllPaging(_class, criteria, level, page, size, sort);
+    public ResponseEntity<Object> findAll(
+        @PathVariable String _class,
+        @RequestParam(value = "level", required = false, defaultValue = "1") int level,
+        @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+        @RequestParam(value = "size", required = false, defaultValue = "100") int size,
+        @RequestParam(value = "sort", required = false) String sort,
+        @RequestParam(value = "criteria", required = false) String criteria,
+        @RequestParam(value = "fields", required = false) String fields) {
+        List<DBObject> resultList = genericService.findAllPaging(_class, criteria, level, page, size, sort, fields);
         return new ResponseEntity<>(resultList, HttpStatus.OK);
     }
 
     @GetMapping("/findAllWithTotal/{_class}")
-    public ResponseEntity<Object> findAllWithTotal(@PathVariable String _class,
-                                          @RequestParam(value = "level", required = false, defaultValue = "1") int level,
-                                          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-                                          @RequestParam(value = "size", required = false, defaultValue = "100") int size,
-                                          @RequestParam(value = "sort", required = false) String sort,
-                                          @RequestParam(value = "criteria", required = false) String criteria) {
+    public ResponseEntity<Object> findAllWithTotal(
+        @PathVariable String _class,
+        @RequestParam(value = "level", required = false, defaultValue = "1") int level,
+        @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+        @RequestParam(value = "size", required = false, defaultValue = "100") int size,
+        @RequestParam(value = "sort", required = false) String sort,
+        @RequestParam(value = "criteria", required = false) String criteria,
+        @RequestParam(value = "fields", required = false) String fields) {
         long count = genericService.count(_class, criteria);
-        List<DBObject> resultList = genericService.findAllPaging(_class, criteria, level, page, size, sort);
+        List<DBObject> resultList = genericService.findAllPaging(_class, criteria, level, page, size, sort, fields);
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("totalRows", count);
         resultMap.put("list", resultList);
@@ -74,9 +78,24 @@ public class GenericResource {
     }
 
     @GetMapping("/{_class}/{id}")
-    public ResponseEntity<Object> findById(@PathVariable String _class, @PathVariable String id,
-                                           @RequestParam(value = "level", required = false, defaultValue = "1") int level) {
-        return new ResponseEntity<>(genericService.getObject(_class, id, 0, level), HttpStatus.OK);
+    public ResponseEntity<Object> findById(
+        @PathVariable String _class, @PathVariable String id,
+        @RequestParam(value = "level", required = false, defaultValue = "1") int level,
+        @RequestParam(value = "fields", required = false) String fields) {
+        List<String> fieldList = null;
+        if (fields != null) {
+            String[] fieldToken = fields.split(",");
+            fieldList = Arrays.asList(fieldToken);
+        }
+        DBObject resp = genericService.getObject(_class, id, 0, level);
+        DBObject result = new BasicDBObject();
+        result.put("_id", resp.get("_id"));
+        for (String key : resp.keySet()) {
+            String[] keyToken = key.split("_");
+            if (fieldList != null && !fieldList.contains(keyToken[0])) continue;
+            result.put(key, resp.get(key));
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
 

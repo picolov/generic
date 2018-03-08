@@ -221,8 +221,8 @@ public class GenericService {
         return mongoTemplate.findAll(DBObject.class, _class);
     }
 
-    public DBObject findOne(String _class, String criteria, int level) {
-        List<DBObject> resultList = findAllPaging(_class, criteria, level, 0, 1, null);
+    public DBObject findOne(String _class, String criteria, int level, String fields) {
+        List<DBObject> resultList = findAllPaging(_class, criteria, level, 0, 1, null, fields);
         if (resultList != null && resultList.size() > 0) {
             return resultList.get(0);
         } else {
@@ -230,7 +230,12 @@ public class GenericService {
         }
     }
 
-    public List<DBObject> findAllPaging(String _class, String criteria, int level, int page, int size, String sort) {
+    public List<DBObject> findAllPaging(String _class, String criteria, int level, int page, int size, String sort, String fields) {
+        List<String> fieldList = null;
+        if (fields != null) {
+            String[] fieldToken = fields.split(",");
+            fieldList = Arrays.asList(fieldToken);
+        }
         Optional<Meta> metaExist = metaRepository.findOneByName(_class);
         if (metaExist.isPresent()) {
             Meta meta = metaExist.get();
@@ -380,6 +385,7 @@ public class GenericService {
                 DBObject result = new BasicDBObject();
                 result.put("_id", resp.get("_id"));
                 for (String key : meta.getColumns().keySet()) {
+                    if (fieldList != null && !fieldList.contains(key)) continue;
                     Map columnMap = meta.getColumns().get(key);
                     if (columnMap.containsKey("isArray") && (Boolean) columnMap.get("isArray")) {
                         for (String paramKey : resp.keySet()) {
