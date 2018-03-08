@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -97,15 +99,20 @@ public class FileResource {
     public ResponseEntity<?> uploadFile(
         @RequestParam("file") MultipartFile uploadfile) {
         Map<String, Object> result = new HashMap<>();
+        List<String> idList = new ArrayList<>();
         if (uploadfile.isEmpty()) {
             return new ResponseEntity<>("please select a file!", HttpStatus.OK);
         }
         try {
-            saveUploadedFiles(Arrays.asList(uploadfile));
+            idList = saveUploadedFiles(Arrays.asList(uploadfile));
         } catch (IOException e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            System.out.println(sw.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         result.put("message", "file " + uploadfile.getOriginalFilename() + " successfully uploaded");
+        result.put("idList", idList);
         return new ResponseEntity<>(result, HttpStatus.OK);
 
     }
@@ -116,22 +123,25 @@ public class FileResource {
         @RequestParam("extraField") String extraField,
         @RequestParam("files") MultipartFile[] uploadfiles) {
         Map<String, Object> result = new HashMap<>();
+        List<String> idList = new ArrayList<>();
         // Get file name
         String uploadedFileName = Arrays.stream(uploadfiles).map(x -> x.getOriginalFilename()).filter(x -> !StringUtils.isEmpty(x)).collect(Collectors.joining(" , "));
         if (StringUtils.isEmpty(uploadedFileName)) {
             return new ResponseEntity<>("please select a file!", HttpStatus.OK);
         }
         try {
-            saveUploadedFiles(Arrays.asList(uploadfiles));
+            idList = saveUploadedFiles(Arrays.asList(uploadfiles));
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         result.put("message", "Successfully uploaded - " + uploadedFileName);
+        result.put("idList", idList);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     //save file
-    private void saveUploadedFiles(List<MultipartFile> files) throws IOException {
+    private List<String> saveUploadedFiles(List<MultipartFile> files) throws IOException {
+        List<String> idList = new ArrayList<>();
         for (MultipartFile file : files) {
             if (file.isEmpty()) {
                 continue; //next pls
@@ -149,6 +159,8 @@ public class FileResource {
             uploadFiles.setFilePath(applicationProperties.getUploadFolder() + fileId + "." + fileNameToken[1]);
             uploadFiles.setDescription("");
             uploadFilesRepository.save(uploadFiles);
+            idList.add(fileId);
         }
+        return idList;
     }
 }
