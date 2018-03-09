@@ -1,11 +1,8 @@
 package com.baswara.generic.web.rest;
 
-
-import com.baswara.generic.config.ApplicationProperties;
 import com.baswara.generic.domain.UploadFiles;
 import com.baswara.generic.repository.UploadFilesRepository;
-import com.baswara.generic.service.LayoutService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.baswara.generic.service.FileService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -17,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,12 +24,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/file")
 public class FileResource {
 
-    private final ApplicationProperties applicationProperties;
-
+    private final FileService fileService;
     private final UploadFilesRepository uploadFilesRepository;
 
-    public FileResource(ApplicationProperties applicationProperties, UploadFilesRepository uploadFilesRepository) {
-        this.applicationProperties = applicationProperties;
+    public FileResource(FileService fileService, UploadFilesRepository uploadFilesRepository) {
+        this.fileService = fileService;
         this.uploadFilesRepository = uploadFilesRepository;
     }
 
@@ -104,11 +98,8 @@ public class FileResource {
             return new ResponseEntity<>("please select a file!", HttpStatus.OK);
         }
         try {
-            idList = saveUploadedFiles(Arrays.asList(uploadfile));
+            idList = fileService.saveUploadedFiles(Arrays.asList(uploadfile));
         } catch (IOException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            System.out.println(sw.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         result.put("message", "file " + uploadfile.getOriginalFilename() + " successfully uploaded");
@@ -130,37 +121,12 @@ public class FileResource {
             return new ResponseEntity<>("please select a file!", HttpStatus.OK);
         }
         try {
-            idList = saveUploadedFiles(Arrays.asList(uploadfiles));
+            idList = fileService.saveUploadedFiles(Arrays.asList(uploadfiles));
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         result.put("message", "Successfully uploaded - " + uploadedFileName);
         result.put("idList", idList);
         return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-    //save file
-    private List<String> saveUploadedFiles(List<MultipartFile> files) throws IOException {
-        List<String> idList = new ArrayList<>();
-        for (MultipartFile file : files) {
-            if (file.isEmpty()) {
-                continue; //next pls
-            }
-            String fileId = UUID.randomUUID().toString();
-            String[] fileNameToken = file.getOriginalFilename().split("\\.");
-            byte[] bytes = file.getBytes();
-            Path path = Paths.get(applicationProperties.getUploadFolder() + fileId + "." + fileNameToken[1]);
-            Files.write(path, bytes);
-            UploadFiles uploadFiles = new UploadFiles();
-            uploadFiles.setId(fileId);
-            uploadFiles.setFileName(fileNameToken[0]);
-            uploadFiles.setExtension(fileNameToken[1]);
-            uploadFiles.setSize(file.getSize());
-            uploadFiles.setFilePath(applicationProperties.getUploadFolder() + fileId + "." + fileNameToken[1]);
-            uploadFiles.setDescription("");
-            uploadFilesRepository.save(uploadFiles);
-            idList.add(fileId);
-        }
-        return idList;
     }
 }

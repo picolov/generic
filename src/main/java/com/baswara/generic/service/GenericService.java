@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -28,14 +29,16 @@ public class GenericService {
     private final Logger log = LoggerFactory.getLogger(GenericService.class);
 
     private final MetaRepository metaRepository;
+    private final FileService fileService;
     private final SimpleDateFormat sdfDateDataType = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private Map<String, Object> ID_MAP = new HashMap<>();
 
     private final MongoTemplate mongoTemplate;
 
-    public GenericService(MongoTemplate mongoTemplate, MetaRepository metaRepository) {
+    public GenericService(MongoTemplate mongoTemplate, MetaRepository metaRepository, FileService fileService) {
         this.mongoTemplate = mongoTemplate;
         this.metaRepository = metaRepository;
+        this.fileService = fileService;
         sdfDateDataType.setTimeZone(TimeZone.getTimeZone("UTC"));
         ID_MAP.put("name", "_id");
         ID_MAP.put("type", "string");
@@ -630,6 +633,23 @@ public class GenericService {
                     BasicDBObject linkToSave = new BasicDBObject();
                     linkToSave.put(key, objParam.get(key));
                     linkToSaveMap.put(relModel, linkToSave);
+                }
+                break;
+            case "file-image":
+                String value = (String) objParam.get(key);
+                // if value is base64 image string, save the image and change the value to the id of the file image
+                if (value.startsWith("data:")) {
+                    List<String> imageList = new ArrayList<>();
+                    imageList.add(value);
+                    List<String> idList = null;
+                    try {
+                        idList = fileService.saveUploadedBase64(imageList);
+                        objToSave.put(key, "generic/file/view/" + idList.get(0));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    objToSave.put(key, objParam.get(key));
                 }
                 break;
             default:
