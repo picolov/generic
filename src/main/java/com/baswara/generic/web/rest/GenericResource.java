@@ -22,14 +22,14 @@ public class GenericResource {
         this.genericService = genericService;
     }
 
-    @GetMapping("/count/{_class}")
+    @GetMapping("/{_class}/count")
     public ResponseEntity<Object> count(@PathVariable String _class,
                                         @RequestParam(value = "criteria", required = false) String criteria) {
         long count = genericService.count(_class, criteria);
         return new ResponseEntity<>(count, HttpStatus.OK);
     }
 
-    @GetMapping("/exist/{_class}/{id}")
+    @GetMapping("/{_class}/exist/{id}")
     public ResponseEntity<Object> existsById(@PathVariable String _class, @PathVariable String id) {
         boolean result = genericService.existsById(_class, id);
         return new ResponseEntity<>(result, HttpStatus.OK);
@@ -60,7 +60,7 @@ public class GenericResource {
         return new ResponseEntity<>(resultList, HttpStatus.OK);
     }
 
-    @GetMapping("/findAllWithTotal/{_class}")
+    @GetMapping("/{_class}/findAllWithTotal")
     public ResponseEntity<Object> findAllWithTotal(
         @PathVariable String _class,
         @RequestParam(value = "level", required = false, defaultValue = "1") int level,
@@ -112,7 +112,7 @@ public class GenericResource {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @PostMapping("/bulk/{_class}")
+    @PostMapping("/{_class}/bulk")
     public ResponseEntity<Object> saveList(@PathVariable String _class, @RequestBody List<BasicDBObject> objParamList) {
         List<DBObject> result = genericService.saveModelBulk(_class, objParamList);
         return new ResponseEntity<>(result, HttpStatus.OK);
