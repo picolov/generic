@@ -692,6 +692,7 @@ public class GenericService {
         Optional<Meta> metaExist = metaRepository.findOneByName(_class);
         Map<String, BasicDBObject> linkToSaveMap = new HashMap<>();
         if (metaExist.isPresent()) {
+            List<DBObject> result = new ArrayList<>();
             List<DBObject> objList = new ArrayList<>();
             for (BasicDBObject objParam:objParamList) {
                 BasicDBObject objToSave = new BasicDBObject();
@@ -699,6 +700,9 @@ public class GenericService {
                 meta.getColumns().put("_id", ID_MAP);
                 if (!objParam.containsField("_id")) {
                     objParam.put("_id", UUID.randomUUID().toString());
+                } else {
+                    result.add(updateModel(_class, objParam));
+                    continue;
                 }
                 for (String key : meta.getColumns().keySet()) {
                     Map columnMap = meta.getColumns().get(key);
@@ -714,7 +718,7 @@ public class GenericService {
                 }
                 objList.add(objToSave);
             }
-            List<DBObject> result = saveList(_class, objList);
+            result.addAll(saveList(_class, objList));
             return result;
         } else {
             throw new MetaClassNotFoundException();
@@ -727,7 +731,7 @@ public class GenericService {
     }
 
     public List<DBObject> saveList(String _class, List<DBObject> objParamList) {
-        mongoTemplate.save(objParamList, _class);
+        mongoTemplate.insert(objParamList, _class);
         return objParamList;
     }
 
