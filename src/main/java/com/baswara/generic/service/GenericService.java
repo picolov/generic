@@ -701,8 +701,10 @@ public class GenericService {
                 if (!objParam.containsField("_id")) {
                     objParam.put("_id", UUID.randomUUID().toString());
                 } else {
-                    result.add(updateModel(_class, objParam));
-                    continue;
+                    if (existsById(_class, (String) objParam.get("_id"))) {
+                        result.add(updateModel(_class, objParam));
+                        continue;
+                    }
                 }
                 for (String key : meta.getColumns().keySet()) {
                     Map columnMap = meta.getColumns().get(key);
