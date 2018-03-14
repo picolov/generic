@@ -48,11 +48,12 @@ public class FileResource {
 
     @GetMapping("/view/{id}")
     public ResponseEntity<Resource> view(@PathVariable String id) throws IOException {
+        boolean isAttachment = false;
         UploadFiles file = uploadFilesRepository.findOne(id);
         Path path = Paths.get(file.getFilePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
         HttpHeaders headers = new HttpHeaders();
-        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        MediaType mediaType;
         switch (file.getExtension().toLowerCase()) {
             case "jpg":
             case "jpeg":
@@ -65,6 +66,15 @@ public class FileResource {
             case "gif":
                 mediaType = MediaType.IMAGE_GIF;
                 break;
+            case "txt":
+                mediaType = MediaType.TEXT_PLAIN;
+                break;
+            default:
+                mediaType = MediaType.APPLICATION_OCTET_STREAM;
+                isAttachment = true;
+        }
+        if (isAttachment) {
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getFileName() + "." + file.getExtension());
         }
         return ResponseEntity.ok()
             .headers(headers)

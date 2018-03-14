@@ -635,15 +635,15 @@ public class GenericService {
                     linkToSaveMap.put(relModel, linkToSave);
                 }
                 break;
-            case "file-image":
+            case "file-base64":
                 String value = (String) objParam.get(key);
                 // if value is base64 image string, save the image and change the value to the id of the file image
                 if (value.startsWith("data:")) {
-                    List<String> imageList = new ArrayList<>();
-                    imageList.add(value);
+                    List<String> fileList = new ArrayList<>();
+                    fileList.add(value);
                     List<String> idList = null;
                     try {
-                        idList = fileService.saveUploadedBase64(imageList);
+                        idList = fileService.saveUploadedBase64(fileList);
                         objToSave.put(key, "generic/file/view/" + idList.get(0));
                     } catch (IOException e) {
                         e.printStackTrace();

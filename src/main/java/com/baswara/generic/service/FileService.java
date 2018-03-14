@@ -57,35 +57,56 @@ public class FileService {
         return idList;
     }
 
-    public List<String> saveUploadedBase64(List<String> base64Images) throws IOException {
+    public List<String> saveUploadedBase64(List<String> base64Files) throws IOException {
         List<String> idList = new ArrayList<>();
-        for (String base64Image : base64Images) {
-            String fileType = "jpg";
-            if (base64Image.startsWith("data:")) {
-                String[] base64ImageToken = base64Image.split(",");
-                String fileTypeDesc = base64ImageToken[0].split(";")[0].substring(5);
+        for (String base64File : base64Files) {
+            String fileType = "txt";
+            if (base64File.startsWith("data:")) {
+                String[] base64FileToken = base64File.split(",");
+                String fileTypeDesc = base64FileToken[0].split(";")[0].substring(5);
                 switch (fileTypeDesc) {
                     case "image/jpeg":
                     case "image/jpg":
                         fileType = "jpg";
                         break;
                     case "image/gif":
+                        fileType = "gif";
+                        break;
+                    case "image/png":
                         fileType = "png";
                         break;
+                    case "application/pdf":
+                        fileType = "pdf";
+                        break;
+                    case "application/msword":
+                        fileType = "doc";
+                        break;
+                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                        fileType = "docx";
+                        break;
+                    case "application/vnd.ms-excel":
+                        fileType = "xls";
+                        break;
+                    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                        fileType = "xlsx";
+                        break;
+                    case "text/plain":
+                        fileType = "txt";
+                        break;
                     default:
-                        fileType = "jpg";
+                        fileType = "txt";
                 }
-                base64Image = base64ImageToken[1];
+                base64File = base64FileToken[1];
             }
-            byte[] binaryImage = Base64.getDecoder().decode(base64Image.getBytes(StandardCharsets.UTF_8));
+            byte[] binaryFile = Base64.getDecoder().decode(base64File.getBytes(StandardCharsets.UTF_8));
             String fileId = UUID.randomUUID().toString();
             Path path = Paths.get(applicationProperties.getUploadFolder() + fileId + "." + fileType);
-            Files.write(path, binaryImage);
+            Files.write(path, binaryFile);
             UploadFiles uploadFiles = new UploadFiles();
             uploadFiles.setId(fileId);
             uploadFiles.setFileName(fileId);
             uploadFiles.setExtension(fileType);
-            uploadFiles.setSize(binaryImage.length);
+            uploadFiles.setSize(binaryFile.length);
             uploadFiles.setFilePath(applicationProperties.getUploadFolder() + fileId + "." + fileType);
             uploadFiles.setDescription("");
             uploadFilesRepository.save(uploadFiles);
