@@ -115,8 +115,9 @@ public class FileService {
     public List<String> saveUploadedBase64Map(List<Map<String, Object>> base64Files) throws IOException {
         List<String> idList = new ArrayList<>();
         for (Map<String, Object> base64File : base64Files) {
+            if (base64File.get("extension") == null || base64File.get("data") == null || base64File.get("fileName") == null) continue;
             String fileType;
-            switch ((String) base64File.get("type")) {
+            switch ((String) base64File.get("extension")) {
                 case "image/jpeg":
                 case "image/jpg":
                     fileType = "jpg";
@@ -159,7 +160,7 @@ public class FileService {
             Files.write(path, binaryFile);
             UploadFiles uploadFiles = new UploadFiles();
             uploadFiles.setId(fileId);
-            uploadFiles.setFileName((String) base64File.get("name"));
+            uploadFiles.setFileName((String) base64File.get("fileName"));
             uploadFiles.setExtension(fileType);
             uploadFiles.setSize(binaryFile.length);
             uploadFiles.setFilePath(applicationProperties.getUploadFolder() + fileId + "." + fileType);
