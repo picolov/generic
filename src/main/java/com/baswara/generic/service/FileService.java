@@ -148,7 +148,12 @@ public class FileService {
                 default:
                     fileType = "txt";
             }
-            byte[] binaryFile = Base64.getDecoder().decode(((String)base64File.get("data")).getBytes(StandardCharsets.UTF_8));
+            String fileData = (String)base64File.get("data");
+            if (fileData.startsWith("data:")) {
+                String[] base64FileToken = fileData.split(",");
+                fileData = base64FileToken[1];
+            }
+            byte[] binaryFile = Base64.getDecoder().decode(fileData.getBytes(StandardCharsets.UTF_8));
             String fileId = UUID.randomUUID().toString();
             Path path = Paths.get(applicationProperties.getUploadFolder() + fileId + "." + fileType);
             Files.write(path, binaryFile);
