@@ -14,10 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -105,6 +102,59 @@ public class FileService {
             UploadFiles uploadFiles = new UploadFiles();
             uploadFiles.setId(fileId);
             uploadFiles.setFileName(fileId);
+            uploadFiles.setExtension(fileType);
+            uploadFiles.setSize(binaryFile.length);
+            uploadFiles.setFilePath(applicationProperties.getUploadFolder() + fileId + "." + fileType);
+            uploadFiles.setDescription("");
+            uploadFilesRepository.save(uploadFiles);
+            idList.add(fileId);
+        }
+        return idList;
+    }
+
+    public List<String> saveUploadedBase64Map(List<Map<String, Object>> base64Files) throws IOException {
+        List<String> idList = new ArrayList<>();
+        for (Map<String, Object> base64File : base64Files) {
+            String fileType;
+            switch ((String) base64File.get("type")) {
+                case "image/jpeg":
+                case "image/jpg":
+                    fileType = "jpg";
+                    break;
+                case "image/gif":
+                    fileType = "gif";
+                    break;
+                case "image/png":
+                    fileType = "png";
+                    break;
+                case "application/pdf":
+                    fileType = "pdf";
+                    break;
+                case "application/msword":
+                    fileType = "doc";
+                    break;
+                case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                    fileType = "docx";
+                    break;
+                case "application/vnd.ms-excel":
+                    fileType = "xls";
+                    break;
+                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                    fileType = "xlsx";
+                    break;
+                case "text/plain":
+                    fileType = "txt";
+                    break;
+                default:
+                    fileType = "txt";
+            }
+            byte[] binaryFile = Base64.getDecoder().decode(((String)base64File.get("data")).getBytes(StandardCharsets.UTF_8));
+            String fileId = UUID.randomUUID().toString();
+            Path path = Paths.get(applicationProperties.getUploadFolder() + fileId + "." + fileType);
+            Files.write(path, binaryFile);
+            UploadFiles uploadFiles = new UploadFiles();
+            uploadFiles.setId(fileId);
+            uploadFiles.setFileName((String) base64File.get("name"));
             uploadFiles.setExtension(fileType);
             uploadFiles.setSize(binaryFile.length);
             uploadFiles.setFilePath(applicationProperties.getUploadFolder() + fileId + "." + fileType);

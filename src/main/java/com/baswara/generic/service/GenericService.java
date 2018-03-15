@@ -2,6 +2,7 @@ package com.baswara.generic.service;
 
 import com.baswara.generic.domain.Meta;
 import com.baswara.generic.repository.MetaRepository;
+import com.baswara.generic.repository.UploadFilesRepository;
 import com.baswara.generic.web.rest.errors.MetaClassNotFoundException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -29,16 +30,18 @@ public class GenericService {
     private final Logger log = LoggerFactory.getLogger(GenericService.class);
 
     private final MetaRepository metaRepository;
+    private final UploadFilesRepository uploadFilesRepository;
     private final FileService fileService;
     private final SimpleDateFormat sdfDateDataType = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private Map<String, Object> ID_MAP = new HashMap<>();
 
     private final MongoTemplate mongoTemplate;
 
-    public GenericService(MongoTemplate mongoTemplate, MetaRepository metaRepository, FileService fileService) {
+    public GenericService(MongoTemplate mongoTemplate, MetaRepository metaRepository, FileService fileService, UploadFilesRepository uploadFilesRepository) {
         this.mongoTemplate = mongoTemplate;
         this.metaRepository = metaRepository;
         this.fileService = fileService;
+        this.uploadFilesRepository = uploadFilesRepository;
         sdfDateDataType.setTimeZone(TimeZone.getTimeZone("UTC"));
         ID_MAP.put("name", "_id");
         ID_MAP.put("type", "string");
@@ -429,8 +432,11 @@ public class GenericService {
                                             result.put(paramKey, resp.get(paramKey));
                                         }
                                         break;
+                                    case "file-base64":
+                                        result.put(paramKey, uploadFilesRepository.findOne((String) resp.get(paramKey)));
+                                        break;
                                     case "numeric":
-                                        result.put(key, new BigDecimal((String) resp.get(paramKey)));
+                                        result.put(paramKey, new BigDecimal((String) resp.get(paramKey)));
                                         break;
                                     case "link":
 
@@ -476,6 +482,9 @@ public class GenericService {
                                 } else {
                                     result.put(key, resp.get(key));
                                 }
+                                break;
+                            case "file-base64":
+                                result.put(key, uploadFilesRepository.findOne((String) resp.get(key)));
                                 break;
                             case "numeric":
                                 result.put(key, new BigDecimal((String) resp.get(key)));
@@ -636,20 +645,35 @@ public class GenericService {
                 }
                 break;
             case "file-base64":
-                String value = (String) objParam.get(key);
-                // if value is base64 image string, save the image and change the value to the id of the file image
-                if (value.startsWith("data:")) {
-                    List<String> fileList = new ArrayList<>();
-                    fileList.add(value);
-                    List<String> idList = null;
+                Object value = objParam.get(key);
+                if (value instanceof String) {
+                    String valueStr = (String) value;
+                    // if value is base64 image string, save the image and change the value to the id of the file image
+                    if (valueStr.startsWith("data:")) {
+                        List<String> fileList = new ArrayList<>();
+                        fileList.add(valueStr);
+                        List<String> idList;
+                        try {
+                            idList = fileService.saveUploadedBase64(fileList);
+                            objToSave.put(key, idList.get(0));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        objToSave.put(key, objParam.get(key));
+                    }
+                } else if (value instanceof Map) {
+                    Map valueMap = (Map) value;
+                    // if value is base64 image string, save the image and change the value to the id of the file image
+                    List<Map<String, Object>> fileList = new ArrayList<>();
+                    fileList.add(valueMap);
+                    List<String> idList;
                     try {
-                        idList = fileService.saveUploadedBase64(fileList);
-                        objToSave.put(key, "generic/file/view/" + idList.get(0));
+                        idList = fileService.saveUploadedBase64Map(fileList);
+                        objToSave.put(key, idList.get(0));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                } else {
-                    objToSave.put(key, objParam.get(key));
                 }
                 break;
             default:
@@ -786,6 +810,9 @@ public class GenericService {
                                         result.put(paramKey, resp.get(paramKey));
                                     }
                                     break;
+                                case "file-base64":
+                                    result.put(paramKey, uploadFilesRepository.findOne((String) resp.get(paramKey)));
+                                    break;
                                 case "numeric":
                                     Object val = resp.get(paramKey);
                                     if (val instanceof String) {
@@ -835,6 +862,9 @@ public class GenericService {
                             } else {
                                 result.put(key, resp.get(key));
                             }
+                            break;
+                        case "file-base64":
+                            result.put(key, uploadFilesRepository.findOne((String) resp.get(key)));
                             break;
                         case "numeric":
                             Object val = resp.get(key);
