@@ -670,7 +670,7 @@ public class GenericService {
                     List<String> idList;
                     try {
                         idList = fileService.saveUploadedBase64Map(fileList);
-                        objToSave.put(key, idList.get(0));
+                        if (!idList.isEmpty()) objToSave.put(key, idList.get(0));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
