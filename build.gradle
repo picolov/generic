@@ -135,6 +135,8 @@ configurations {
 repositories {
     mavenLocal()
     jcenter()
+    maven{url "http://jasperreports.sourceforge.net/maven2/"}
+    maven{url "http://jaspersoft.artifactoryonline.com/jaspersoft/third-party-ce-artifacts/"}
 }
 
 dependencies {
@@ -194,6 +196,8 @@ dependencies {
     compile "org.mapstruct:mapstruct-jdk8:${mapstruct_version}"
 
     compile "org.codehaus.groovy:groovy-all:2.4.10"
+
+    compile "net.sf.jasperreports:jasperreports:6.5.1"
 
     testCompile "com.jayway.jsonpath:json-path"
     testCompile ("org.springframework.boot:spring-boot-starter-test") {

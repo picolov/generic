@@ -7,11 +7,15 @@ import com.baswara.generic.repository.FlowRepository;
 import com.baswara.generic.repository.LayoutRepository;
 import com.baswara.generic.service.GenericService;
 import com.baswara.generic.service.LayoutService;
+import com.baswara.generic.service.ReportService;
 import com.mongodb.BasicDBObject;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,14 +38,16 @@ public class FlowResource {
 
     private final GenericService genericService;
     private final LayoutService layoutService;
+    private final ReportService reportService;
     private final MongoTemplate mongoTemplate;
     private final SimpleDateFormat sdfDateDataType = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, LayoutService layoutService, AccountFeignClient accountFeignClient, MongoTemplate mongoTemplate) {
+    public FlowResource(LayoutRepository layoutRepository, FlowRepository flowRepository, GenericService genericService, LayoutService layoutService, ReportService reportService, AccountFeignClient accountFeignClient, MongoTemplate mongoTemplate) {
         this.layoutRepository = layoutRepository;
         this.flowRepository = flowRepository;
         this.genericService = genericService;
         this.layoutService = layoutService;
+        this.reportService = reportService;
         this.accountFeignClient = accountFeignClient;
         this.mongoTemplate = mongoTemplate;
         sdfDateDataType.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -103,6 +109,7 @@ public class FlowResource {
             binding.setVariable("function", this);
             binding.setVariable("genericService", genericService);
             binding.setVariable("layoutService", layoutService);
+            binding.setVariable("reportService", reportService);
             binding.setVariable("uaaService", accountFeignClient);
             binding.setVariable("mongo", mongoTemplate);
             binding.setVariable("path", path);
@@ -110,6 +117,42 @@ public class FlowResource {
             GroovyShell shell = new GroovyShell(binding);
             Object returnVal = shell.evaluate(flow.getScript());
             return new ResponseEntity<>(returnVal, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
+        }
+    }
+
+    @PostMapping("/download/{path}")
+    public ResponseEntity<Object> download(HttpServletRequest request, @PathVariable String path, @RequestBody BasicDBObject param) {
+        Optional<Flow> flowExist = flowRepository.findOneByPath(path);
+        if (flowExist.isPresent()) {
+            Flow flow = flowExist.get();
+            Map<String, String[]> queryParamMap = request.getParameterMap();
+            Map<String, Object> account = accountFeignClient.getAccount();
+            Binding binding = new Binding();
+            binding.setVariable("param", param);
+            binding.setVariable("queryParam", queryParamMap);
+            binding.setVariable("account", account);
+            binding.setVariable("function", this);
+            binding.setVariable("genericService", genericService);
+            binding.setVariable("layoutService", layoutService);
+            binding.setVariable("reportService", reportService);
+            binding.setVariable("uaaService", accountFeignClient);
+            binding.setVariable("mongo", mongoTemplate);
+            binding.setVariable("path", path);
+            binding.setVariable("sdf", sdfDateDataType);
+            GroovyShell shell = new GroovyShell(binding);
+            Map<String, Object> returnVal = (Map) shell.evaluate(flow.getScript());
+            ByteArrayResource resource = new ByteArrayResource((byte[])returnVal.get("bytes"));
+            HttpHeaders headers = new HttpHeaders();
+            if (!returnVal.containsKey("name")) returnVal.put("name", "file");
+            if (!returnVal.containsKey("type")) returnVal.put("type", "pdf");
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + returnVal.get("name") + "." + returnVal.get("type"));
+            return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(((byte[])returnVal.get("bytes")).length)
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
         } else {
             return new ResponseEntity<>(new HashMap<String, Map>(), HttpStatus.OK);
         }

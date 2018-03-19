@@ -12,6 +12,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ApplicationProperties {
     private String uploadFolder;
 
+    private String reportFolder;
+
+    public String getReportFolder() {
+        return reportFolder;
+    }
+
+    public void setReportFolder(String reportFolder) {
+        this.reportFolder = reportFolder;
+    }
+
     public String getUploadFolder() {
         return uploadFolder;
     }

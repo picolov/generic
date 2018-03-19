@@ -144,3 +144,4 @@ oauth2:
 
 application:
     upload-folder: C://WORK//
+    report-folder: C://WORK//
