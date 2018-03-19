@@ -133,5 +133,5 @@ oauth2:
 # ===================================================================
 
 application:
-    upload-folder: /files
-    report-folder: /reports
+    upload-folder: /files/
+    report-folder: /reports/
