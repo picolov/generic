@@ -51,9 +51,6 @@ public class ReportService {
 
     public byte[] generate(String id, Map<String, Object> param, String format) throws IOException, JRException {
         File reportFile = new File(applicationProperties.getReportFolder() + id + ".jasper");
-        String logoFile = applicationProperties.getReportFolder() + "logo.png";
-        param.put("logo", logoFile);
-        System.out.println(reportFile.getAbsolutePath());
         JasperReport jasperReport = (JasperReport) JRLoader.loadObject(reportFile);
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, param);
