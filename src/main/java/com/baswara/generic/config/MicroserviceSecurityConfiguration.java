@@ -48,6 +48,7 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
             .antMatchers("/meta/**").authenticated()
             .antMatchers("/layout/**").authenticated()
             .antMatchers("/class/**").authenticated()
+            .antMatchers("/flow/process/registerUser").permitAll()
             .antMatchers("/flow/**").authenticated()
             .antMatchers("/language/**").authenticated()
             .antMatchers("/urlRoute/**").authenticated()
